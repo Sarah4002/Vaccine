@@ -1,0 +1,125 @@
+{
+  "patients": [
+    {
+      "id": "1",
+      "nom": "Benali",
+      "prenom": "Ahmed",
+      "dateNaissance": "1985-03-15",
+      "sexe": "M",
+      "telephone": "0550123456",
+      "email": "ahmed.benali@email.com",
+      "adresse": "Oran, Algérie",
+      "groupeSanguin": "A+",
+      "createdAt": "2026-03-25T18:50:08.254Z"
+    },
+    {
+      "id": "2",
+      "nom": "Kaddour",
+      "prenom": "Fatima",
+      "dateNaissance": "1992-07-22",
+      "sexe": "F",
+      "telephone": "0661234567",
+      "email": "fatima.kaddour@email.com",
+      "adresse": "Alger, Algérie",
+      "groupeSanguin": "O+",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "3",
+      "nom": "Meziane",
+      "prenom": "Youcef",
+      "dateNaissance": "2010-11-08",
+      "sexe": "M",
+      "telephone": "0770987654",
+      "email": "parent.meziane@email.com",
+      "adresse": "Constantine, Algérie",
+      "groupeSanguin": "B+",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "2128a8e5-c810-4bc6-a8b8-85d79887b7ac",
+      "nom": "Belmahi",
+      "prenom": "Sara",
+      "dateNaissance": "2004-09-17",
+      "sexe": "F",
+      "telephone": "0561148201",
+      "email": "",
+      "adresse": "Chetouane-Tlemcen",
+      "groupeSanguin": "A+",
+      "createdAt": "2026-03-25T18:51:09.574Z"
+    }
+  ],
+  "vaccinations": [
+    {
+      "id": "v1",
+      "patientId": "1",
+      "vaccin": "COVID-19 (Pfizer)",
+      "dose": "1ère dose",
+      "dateAdministration": "2024-01-15",
+      "dateProchaineDose": "2024-02-15",
+      "medecin": "Dr. Hadj Ali",
+      "centre": "Clinique El Baraka",
+      "lotNumero": "LOT-2024-001",
+      "statut": "complete",
+      "notes": "Pas de réaction indésirable",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "v2",
+      "patientId": "1",
+      "vaccin": "COVID-19 (Pfizer)",
+      "dose": "2ème dose",
+      "dateAdministration": "2024-02-18",
+      "dateProchaineDose": null,
+      "medecin": "Dr. Hadj Ali",
+      "centre": "Clinique El Baraka",
+      "lotNumero": "LOT-2024-008",
+      "statut": "complete",
+      "notes": "Légère fièvre 24h après",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "v3",
+      "patientId": "2",
+      "vaccin": "Grippe (Influvac)",
+      "dose": "Annuelle",
+      "dateAdministration": "2024-10-05",
+      "dateProchaineDose": "2025-10-05",
+      "medecin": "Dr. Boumediene",
+      "centre": "CHU Oran",
+      "lotNumero": "LOT-2024-FLU-12",
+      "statut": "complete",
+      "notes": "",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "v4",
+      "patientId": "3",
+      "vaccin": "ROR (Rougeole-Oreillons-Rubéole)",
+      "dose": "1ère dose",
+      "dateAdministration": "2024-12-01",
+      "dateProchaineDose": "2025-06-01",
+      "medecin": "Dr. Cherif",
+      "centre": "Polyclinique Ain El Turck",
+      "lotNumero": "LOT-2024-ROR-05",
+      "statut": "a_venir",
+      "notes": "Rappel prévu dans 6 mois",
+      "createdAt": "2026-03-25T18:50:08.256Z"
+    },
+    {
+      "id": "2d6212f9-fa08-4dff-baae-f8b0a33ce631",
+      "patientId": "2128a8e5-c810-4bc6-a8b8-85d79887b7ac",
+      "vaccin": "COVID-19 (Pfizer)",
+      "dose": "1ère dose",
+      "dateAdministration": "2026-03-25",
+      "dateProchaineDose": "2026-04-20",
+      "medecin": "Dr.Wafa",
+      "centre": "CHU Tlemcen",
+      "lotNumero": "LOT-0010",
+      "statut": "a_venir",
+      "notes": "",
+      "createdAt": "2026-03-25T19:53:54.704Z",
+      "patient": "Sara Belmahi"
+    }
+  ]
+}
