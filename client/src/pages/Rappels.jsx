@@ -13,107 +13,147 @@ export default function Rappels() {
   const urgents = rappels.filter(r => r.urgent && !r.enRetard);
   const prochains = rappels.filter(r => !r.urgent && !r.enRetard);
 
-  const Section = ({ title, items, emptyMsg, badgeClass }) => (
-    <div className="card" style={{ marginBottom: 20 }}>
-      <h3 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{title}</h3>
+  const Section = ({ title, items, emptyMsg, theme }) => (
+    <div className="card" style={{ marginBottom: 24, padding: 24, border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ background: theme.bg, color: theme.color, width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {theme.icon}
+        </div>
+        <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18, color: '#1d2129', margin: 0 }}>
+          {title} <span style={{ color: theme.color, marginLeft: 8 }}>({items.length})</span>
+        </h3>
+      </div>
+
       {items.length === 0 ? (
-        <div style={{ color: '#94a3b8', fontSize: 14, padding: '12px 0' }}>{emptyMsg}</div>
+        <div style={{ color: '#8a94a6', fontSize: 14, padding: '20px 0', borderTop: '1px solid #eaebef' }}>
+          {emptyMsg}
+        </div>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Patient</th>
-              <th>Téléphone</th>
-              <th>Vaccin</th>
-              <th>Dose</th>
-              <th>Date rappel</th>
-              <th>Délai</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map(r => (
-              <tr key={r.id}>
-                <td>
-                  <div className="patient-cell">
-                    <div className="avatar">{r.patient?.split(' ').map(n => n[0]).join('').slice(0,2)}</div>
-                    <span style={{ fontWeight: 500 }}>{r.patient}</span>
-                  </div>
-                </td>
-                <td style={{ color: '#94a3b8', fontSize: 13 }}>{r.telephone || '—'}</td>
-                <td>{r.vaccin}</td>
-                <td>{r.dose}</td>
-                <td>{new Date(r.dateProchaineDose).toLocaleDateString('fr-FR')}</td>
-                <td>
-                  <span className={`badge ${badgeClass}`}>
-                    {r.enRetard
-                      ? `${Math.abs(r.joursRestants)}j de retard`
-                      : r.joursRestants === 0
-                        ? "Aujourd'hui"
-                        : `Dans ${r.joursRestants}j`}
-                  </span>
-                </td>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ color: '#8a94a6', borderBottom: '1px solid #eaebef' }}>
+                <th style={{ padding: '12px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>Patient</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>Contact</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>Vaccin & Dose</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>Date prévue</th>
+                <th style={{ padding: '12px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>Délai & Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((r, i) => (
+                <tr key={r.id} style={{ borderBottom: i < items.length-1 ? '1px solid #eaebef' : 'none' }}>
+                  
+                  <td style={{ padding: '16px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#f4f5f9', color: '#1d2129', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 13 }}>
+                      {r.patient?.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#1d2129' }}>{r.patient}</span>
+                  </td>
+
+                  <td style={{ padding: '16px 8px' }}>
+                    <div style={{ color: '#1d2129', fontSize: 13, fontWeight: 600 }}>{r.telephone || 'Non renseigné'}</div>
+                  </td>
+
+                  <td style={{ padding: '16px 8px' }}>
+                    <div style={{ fontWeight: 800, color: theme.color, fontSize: 14 }}>{r.vaccin}</div>
+                    <div style={{ fontSize: 12, color: '#8a94a6', marginTop: 2 }}>{r.dose}</div>
+                  </td>
+
+                  <td style={{ padding: '16px 8px', fontWeight: 600, fontSize: 13, color: '#1d2129' }}>
+                    {new Date(r.dateProchaineDose).toLocaleDateString('fr-FR')}
+                  </td>
+
+                  <td style={{ padding: '16px 8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <span style={{ 
+                        background: r.enRetard ? '#fee2e2' : r.joursRestants === 0 ? '#ffedd5' : theme.bg, 
+                        color: r.enRetard ? '#ef4444' : r.joursRestants === 0 ? '#f97316' : theme.color, 
+                        padding: '4px 10px', borderRadius: '6px', fontSize: 12, fontWeight: 700 
+                      }}>
+                        {r.enRetard ? `${Math.abs(r.joursRestants)} jours de retard` : r.joursRestants === 0 ? "Aujourd'hui" : `Dans ${r.joursRestants} jours`}
+                      </span>
+                      
+                      {/* Fake action button pour "Convoquer" */}
+                      <button style={{ background: 'white', border: '1px solid #eaebef', padding: '6px 12px', borderRadius: '50px', fontSize: 12, fontWeight: 600, color: '#1d2129', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Relancer
+                      </button>
+                    </div>
+                  </td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 
   return (
     <div>
-      <div className="page-header">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
-          <h1 className="page-title">Rappels de vaccination</h1>
-          <p className="page-subtitle">Suivez les vaccinations à planifier dans les 30 prochains jours</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Alertes & Rappels</h1>
+          <p style={{ color: '#8a94a6', fontSize: 14 }}>Planifiez et convoquez les patients pour assurer la couverture vaccinale.</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
           {enRetard.length > 0 && (
-            <span className="badge badge-danger" style={{ fontSize: 14 }}>
+            <div style={{ background: '#fee2e2', color: '#ef4444', padding: '8px 16px', borderRadius: '50px', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
               {enRetard.length} en retard
-            </span>
+            </div>
           )}
-          {urgents.length > 0 && (
-            <span className="badge badge-warning" style={{ fontSize: 14 }}>
-              {urgents.length} urgents
-            </span>
-          )}
+          <button style={{ background: 'white', color: '#1d2129', border: '1px solid #eaebef', padding: '10px 20px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            Trier
+          </button>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>Chargement...</div>
+        <div style={{ textAlign: 'center', padding: 60, color: '#8a94a6' }}>Recherche des rappels...</div>
       ) : rappels.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="empty-icon"></div>
-            <div className="empty-title">Aucun rappel dans les 30 prochains jours</div>
-            <p>Tous vos patients sont à jour dans leurs vaccinations.</p>
-          </div>
-        </div>
+         <div style={{ textAlign: 'center', padding: '80px 20px', color: '#8a94a6', background: 'white', borderRadius: '16px', border: '1px dashed #eaebef' }}>
+            <svg style={{ margin: '0 auto 16px auto', color: '#cbd5e1' }} width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#1d2129', marginBottom: 8, fontFamily: 'Syne' }}>Tous les patients sont à jour</div>
+            <p style={{ margin: 0 }}>Il n'y a aucun rappel planifié dans les 30 prochains jours.</p>
+         </div>
       ) : (
         <>
           {enRetard.length > 0 && (
             <Section
-              title="En retard"
+              title="Priorité Absolue : En retard"
               items={enRetard}
               emptyMsg="Aucune vaccination en retard"
-              badgeClass="badge-danger"
+              theme={{ 
+                bg: '#fee2e2', color: '#ef4444', 
+                icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 
+              }}
             />
           )}
+
           {urgents.length > 0 && (
             <Section
-              title="Urgents (dans les 7 jours)"
+              title="Convocations Urgentes (7 prochains jours)"
               items={urgents}
               emptyMsg="Aucun rappel urgent"
-              badgeClass="badge-warning"
+              theme={{ 
+                bg: '#ffedd5', color: '#f97316', 
+                icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              }}
             />
           )}
+
           <Section
-            title="À venir (8 à 30 jours)"
+            title="À planifier (8 à 30 jours)"
             items={prochains}
-            emptyMsg="Aucun rappel planifié"
-            badgeClass="badge-info"
+            emptyMsg="Aucune échéance à moyen terme."
+            theme={{ 
+              bg: '#ebf2ff', color: '#0056ff', 
+              icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            }}
           />
         </>
       )}

@@ -30,4 +30,18 @@ export const api = {
   getRappels: () => request('/rappels'),
   getStats: () => request('/stats'),
   getVaccinsDisponibles: () => request('/vaccins-disponibles'),
+  
+  // Stocks
+  getStocks: () => request('/stocks'),
+  createStock: (data) => request('/stocks', { method: 'POST', body: JSON.stringify(data) }),
+  updateStock: (id, data) => request(`/stocks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteStock: (id) => request(`/stocks/${id}`, { method: 'DELETE' }),
+  
+  // Ordonnances
+  getOrdonnances: (patientId) => request(`/ordonnances?patientId=${patientId}`),
+  createOrdonnance: (data) => request('/ordonnances', { method: 'POST', body: JSON.stringify(data) }),
+  deleteOrdonnance: (id) => request(`/ordonnances/${id}`, { method: 'DELETE' }),
+
+  // Auth
+  login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
 };

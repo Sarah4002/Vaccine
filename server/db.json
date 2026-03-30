@@ -10,116 +10,167 @@
       "email": "ahmed.benali@email.com",
       "adresse": "Oran, Algérie",
       "groupeSanguin": "A+",
-      "createdAt": "2026-03-25T18:50:08.254Z"
+      "poids": "75",
+      "fonction": "DZD",
+      "service": "SEMEP",
+      "createdAt": "2026-03-30T00:08:45.101Z"
     },
     {
-      "id": "2",
-      "nom": "Kaddour",
-      "prenom": "Fatima",
-      "dateNaissance": "1992-07-22",
+      "id": "20031001-20260330-828",
+      "nom": "derkaoui",
+      "prenom": "fatema",
+      "dateNaissance": "2003-10-01",
       "sexe": "F",
-      "telephone": "0661234567",
-      "email": "fatima.kaddour@email.com",
-      "adresse": "Alger, Algérie",
-      "groupeSanguin": "O+",
-      "createdAt": "2026-03-25T18:50:08.256Z"
-    },
-    {
-      "id": "3",
-      "nom": "Meziane",
-      "prenom": "Youcef",
-      "dateNaissance": "2010-11-08",
-      "sexe": "M",
-      "telephone": "0770987654",
-      "email": "parent.meziane@email.com",
-      "adresse": "Constantine, Algérie",
-      "groupeSanguin": "B+",
-      "createdAt": "2026-03-25T18:50:08.256Z"
-    },
-    {
-      "id": "2128a8e5-c810-4bc6-a8b8-85d79887b7ac",
-      "nom": "Belmahi",
-      "prenom": "Sara",
-      "dateNaissance": "2004-09-17",
-      "sexe": "F",
-      "telephone": "0561148201",
-      "email": "",
-      "adresse": "Chetouane-Tlemcen",
+      "telephone": "0554199024",
+      "email": "derkaouitema9@gmail.com",
+      "wilaya": "Tlemcen",
+      "daira": "Chetouane",
+      "commune": "Chetouane",
+      "adressePrecise": "",
       "groupeSanguin": "A+",
-      "createdAt": "2026-03-25T18:51:09.574Z"
+      "poids": "56",
+      "fonction": "Etudiante",
+      "service": "Universite",
+      "profession": "aucune",
+      "instruction": "Universitaire",
+      "adresse": "Chetouane, Chetouane, Tlemcen ()",
+      "createdAt": "2026-03-30T08:55:14.124Z"
+    },
+    {
+      "id": "20000311-20260330-905",
+      "nom": "Berrezoug",
+      "prenom": "Salma",
+      "dateNaissance": "2000-03-11",
+      "sexe": "F",
+      "telephone": "",
+      "email": "",
+      "wilaya": "Tlemcen",
+      "daira": "Maghnia",
+      "commune": "Maghnia",
+      "adressePrecise": "",
+      "groupeSanguin": "A+",
+      "poids": "60",
+      "fonction": "infermier",
+      "service": "",
+      "profession": "infermiere",
+      "instruction": "Universitaire",
+      "adresse": "Maghnia, Maghnia, Tlemcen ()",
+      "createdAt": "2026-03-30T09:10:18.231Z"
+    },
+    {
+      "id": "20031001-20260330-296",
+      "nom": "derkaoui",
+      "prenom": "fatema",
+      "dateNaissance": "2003-10-01",
+      "sexe": "F",
+      "telephone": "0554199024",
+      "email": "derkaouitema9@gmail.com",
+      "wilaya": "Tlemcen",
+      "daira": "Nedroma",
+      "commune": "Nedroma",
+      "adressePrecise": "",
+      "groupeSanguin": "A+",
+      "poids": "56.1",
+      "fonction": "Etudiante",
+      "service": "Universite",
+      "profession": "aucune",
+      "instruction": "",
+      "adresse": "Nedroma, Nedroma, Tlemcen ()",
+      "createdAt": "2026-03-30T10:05:36.338Z"
     }
   ],
   "vaccinations": [
     {
-      "id": "v1",
-      "patientId": "1",
-      "vaccin": "COVID-19 (Pfizer)",
-      "dose": "1ère dose",
-      "dateAdministration": "2024-01-15",
-      "dateProchaineDose": "2024-02-15",
-      "medecin": "Dr. Hadj Ali",
-      "centre": "Clinique El Baraka",
-      "lotNumero": "LOT-2024-001",
+      "id": "8141c836-6b30-45ea-84dc-87dc19992df6",
+      "patientId": "20031001-20260330-828",
+      "type": "dt",
+      "protocoleData": {
+        "grade": "Grade II",
+        "heureArrivee": "14:58",
+        "dateExposition": "2026-03-23",
+        "saignement": true,
+        "nombreLesions": "Lésions multiples",
+        "sortAnimal": "En observation",
+        "especeAnimal": "chien",
+        "doses": {
+          "J0": {
+            "date": "2026-03-23",
+            "type": "VAR"
+          }
+        },
+        "erig": true,
+        "doseErigUI": "17"
+      },
       "statut": "complete",
-      "notes": "Pas de réaction indésirable",
-      "createdAt": "2026-03-25T18:50:08.256Z"
-    },
-    {
-      "id": "v2",
-      "patientId": "1",
-      "vaccin": "COVID-19 (Pfizer)",
-      "dose": "2ème dose",
-      "dateAdministration": "2024-02-18",
+      "vaccin": "Anti-Diphtérique et Antitéitanique (DT)",
+      "dose": "Terminé",
+      "dateAdministration": "2026-03-30T09:00:46.314Z",
       "dateProchaineDose": null,
-      "medecin": "Dr. Hadj Ali",
-      "centre": "Clinique El Baraka",
-      "lotNumero": "LOT-2024-008",
+      "createdAt": "2026-03-30T09:00:46.333Z"
+    },
+    {
+      "id": "c979f73d-1740-4865-b414-3e9c9e036b6a",
+      "patientId": "20031001-20260330-828",
+      "type": "rage",
+      "protocoleData": {
+        "grade": "Grade I",
+        "heureArrivee": "13:06",
+        "dateExposition": "2026-09-30",
+        "saignement": true,
+        "nombreLesions": "Lésions multiples",
+        "erig": false
+      },
       "statut": "complete",
-      "notes": "Légère fièvre 24h après",
-      "createdAt": "2026-03-25T18:50:08.256Z"
+      "vaccin": "Anti-Rabique Tissulaire",
+      "dose": "J0",
+      "dateAdministration": "2026-03-30T10:10:12.176Z",
+      "dateProchaineDose": "2026-09-30",
+      "createdAt": "2026-03-30T10:10:12.192Z"
+    }
+  ],
+  "ordonnances": [
+    {
+      "id": "36b532bd-0969-4058-a491-685874656bab",
+      "date": "2026-03-30",
+      "medecin": "",
+      "medicaments": [
+        {
+          "nom": "",
+          "dosage": "",
+          "duree": "",
+          "instructions": ""
+        }
+      ],
+      "observations": "",
+      "diagnostic": "",
+      "patientId": "1",
+      "createdAt": "2026-03-30T08:49:16.658Z"
+    }
+  ],
+  "stocks": [
+    {
+      "id": "1",
+      "vaccin": "Anti-Rabique",
+      "lot": "LOT-RAB-2024-001",
+      "quantiteInitiale": 500,
+      "quantiteRestante": 320,
+      "datePeremption": "2025-06-30"
     },
     {
-      "id": "v3",
-      "patientId": "2",
-      "vaccin": "Grippe (Influvac)",
-      "dose": "Annuelle",
-      "dateAdministration": "2024-10-05",
-      "dateProchaineDose": "2025-10-05",
-      "medecin": "Dr. Boumediene",
-      "centre": "CHU Oran",
-      "lotNumero": "LOT-2024-FLU-12",
-      "statut": "complete",
-      "notes": "",
-      "createdAt": "2026-03-25T18:50:08.256Z"
+      "id": "2",
+      "vaccin": "Hépatite B",
+      "lot": "LOT-HEP-2024-045",
+      "quantiteInitiale": 200,
+      "quantiteRestante": 15,
+      "datePeremption": "2024-08-15"
     },
     {
-      "id": "v4",
-      "patientId": "3",
-      "vaccin": "ROR (Rougeole-Oreillons-Rubéole)",
-      "dose": "1ère dose",
-      "dateAdministration": "2024-12-01",
-      "dateProchaineDose": "2025-06-01",
-      "medecin": "Dr. Cherif",
-      "centre": "Polyclinique Ain El Turck",
-      "lotNumero": "LOT-2024-ROR-05",
-      "statut": "a_venir",
-      "notes": "Rappel prévu dans 6 mois",
-      "createdAt": "2026-03-25T18:50:08.256Z"
-    },
-    {
-      "id": "2d6212f9-fa08-4dff-baae-f8b0a33ce631",
-      "patientId": "2128a8e5-c810-4bc6-a8b8-85d79887b7ac",
-      "vaccin": "COVID-19 (Pfizer)",
-      "dose": "1ère dose",
-      "dateAdministration": "2026-03-25",
-      "dateProchaineDose": "2026-04-20",
-      "medecin": "Dr.Wafa",
-      "centre": "CHU Tlemcen",
-      "lotNumero": "LOT-0010",
-      "statut": "a_venir",
-      "notes": "",
-      "createdAt": "2026-03-25T19:53:54.704Z",
-      "patient": "Sara Belmahi"
+      "id": "3",
+      "vaccin": "DT",
+      "lot": "LOT-DT-2024-FLU-12",
+      "quantiteInitiale": 1000,
+      "quantiteRestante": 100,
+      "datePeremption": "2024-12-01"
     }
   ]
 }
