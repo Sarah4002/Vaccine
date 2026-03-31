@@ -1,0 +1,15 @@
+{
+  "name": "vaccitrack",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "start:server": "cd server && node index.js",
+    "start:client": "cd client && npm start",
+    "electron": "electron .",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run electron\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
