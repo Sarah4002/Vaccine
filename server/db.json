@@ -77,6 +77,27 @@
       "instruction": "",
       "adresse": "Nedroma, Nedroma, Tlemcen ()",
       "createdAt": "2026-03-30T10:05:36.338Z"
+    },
+    {
+      "id": "20030901-20260330-388",
+      "nom": "Derkaoui",
+      "prenom": "Téma",
+      "dateNaissance": "2003-09-01",
+      "sexe": "M",
+      "telephone": "",
+      "email": "derkaouitema9@gmail.com",
+      "wilaya": "Tlemcen",
+      "daira": "Remchi",
+      "commune": "Remchi",
+      "adressePrecise": "",
+      "groupeSanguin": "A+",
+      "poids": "66",
+      "fonction": "",
+      "service": "",
+      "profession": "",
+      "instruction": "",
+      "adresse": "Remchi, Remchi, Tlemcen ()",
+      "createdAt": "2026-03-30T12:11:11.290Z"
     }
   ],
   "vaccinations": [
@@ -171,6 +192,66 @@
       "quantiteInitiale": 1000,
       "quantiteRestante": 100,
       "datePeremption": "2024-12-01"
+    }
+  ],
+  "settings": [
+    {
+      "id": "default",
+      "langue": "fr",
+      "theme": "dark",
+      "notificationsEmail": true,
+      "notificationsPush": true,
+      "affichageRappels": true,
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    }
+  ],
+  "helpArticles": [
+    {
+      "id": "1",
+      "titre": "Comment ajouter un nouveau patient?",
+      "categorie": "Patients",
+      "contenu": "Pour ajouter un nouveau patient, accédez à la page Patients, cliquez sur 'Ajouter Patient' et remplissez le formulaire avec les informations personnelles.",
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "titre": "Enregistrer une vaccination",
+      "categorie": "Vaccinations",
+      "contenu": "Allez à la page Vaccinations, sélectionnez un patient, puis cliquez sur 'Nouvelle Vaccination' pour enregistrer le vaccin administré.",
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    },
+    {
+      "id": "3",
+      "titre": "Gérer les stocks de vaccins",
+      "categorie": "Pharmacie",
+      "contenu": "La page Pharmacie affiche l'inventaire des vaccins disponibles. Vous pouvez mettre à jour les quantités et consulter les dates d'expiration.",
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    },
+    {
+      "id": "4",
+      "titre": "Consulter les rappels de vaccination",
+      "categorie": "Rappels",
+      "contenu": "La page Rappels affiche les vaccinations à venir. Les rappels en retard sont mis en évidence en rouge.",
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    },
+    {
+      "id": "5",
+      "titre": "Utiliser la carte SIG",
+      "categorie": "Carte",
+      "contenu": "La Carte SIG Tlemcen affiche la zone de Tlemcen avec les emplacements des centres de vaccination.",
+      "createdAt": "2026-03-30T00:00:00.000Z"
+    }
+  ],
+  "supportTickets": [
+    {
+      "id": "1",
+      "titre": "Erreur lors de l'ajout de patient",
+      "description": "Le système génère une erreur quand je tente d'ajouter un nouveau patient.",
+      "categorie": "Bug",
+      "statut": "resolu",
+      "priorite": "haute",
+      "createdAt": "2026-03-25T10:00:00.000Z",
+      "updatedAt": "2026-03-28T15:30:00.000Z"
     }
   ]
 }

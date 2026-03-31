@@ -26,7 +26,42 @@ const DEFAULT_DB = {
     { id: '1', vaccin: 'Anti-Rabique', lot: 'LOT-RAB-2024-001', quantiteInitiale: 500, quantiteRestante: 320, datePeremption: '2025-06-30' },
     { id: '2', vaccin: 'Hépatite B', lot: 'LOT-HEP-2024-045', quantiteInitiale: 200, quantiteRestante: 15, datePeremption: '2024-08-15' },
     { id: '3', vaccin: 'DT', lot: 'LOT-DT-2024-FLU-12', quantiteInitiale: 1000, quantiteRestante: 100, datePeremption: '2024-12-01' }
-  ]
+  ],
+  settings: [
+    {
+      id: 'default',
+      langue: 'fr',
+      theme: 'light',
+      notificationsEmail: true,
+      notificationsPush: true,
+      affichageRappels: true,
+      createdAt: new Date().toISOString()
+    }
+  ],
+  helpArticles: [
+    {
+      id: '1',
+      titre: 'Comment ajouter un nouveau patient?',
+      categorie: 'Patients',
+      contenu: 'Pour ajouter un nouveau patient, accédez à la page Patients, cliquez sur "Ajouter Patient" et remplissez le formulaire avec les informations personnelles.',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      titre: 'Enregistrer une vaccination',
+      categorie: 'Vaccinations',
+      contenu: 'Allez à la page Vaccinations, sélectionnez un patient, puis cliquez sur "Nouvelle Vaccination" pour enregistrer le vaccin administré.',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '3',
+      titre: 'Gérer les stocks de vaccins',
+      categorie: 'Pharmacie',
+      contenu: 'La page Pharmacie affiche l\'inventaire des vaccins disponibles. Vous pouvez mettre à jour les quantités et consulter les dates d\'expiration.',
+      createdAt: new Date().toISOString()
+    }
+  ],
+  supportTickets: []
 };
 
 function loadDB() {
@@ -35,8 +70,11 @@ function loadDB() {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
       const parsed = JSON.parse(raw);
       if (parsed.patients && parsed.vaccinations && parsed.stocks) {
-        // Migration: ajouter ordonnances si absent
+        // Migration: ajouter les champs manquants
         if (!parsed.ordonnances) parsed.ordonnances = [];
+        if (!parsed.settings) parsed.settings = [];
+        if (!parsed.helpArticles) parsed.helpArticles = [];
+        if (!parsed.supportTickets) parsed.supportTickets = [];
         return parsed;
       }
     }
@@ -224,6 +262,132 @@ app.delete('/api/ordonnances/:id', (req, res) => {
   res.json({ message: 'Ordonnance supprimée' });
 });
 
+// ===== SETTINGS (PARAMÈTRES) =====
+app.get('/api/settings', (req, res) => {
+  const settings = db.settings && db.settings.length > 0 ? db.settings[0] : {
+    id: 'default',
+    langue: 'fr',
+    theme: 'light',
+    notificationsEmail: true,
+    notificationsPush: true,
+    affichageRappels: true
+  };
+  res.json(settings);
+});
+
+app.put('/api/settings', (req, res) => {
+  if (!db.settings) db.settings = [];
+  if (db.settings.length === 0) {
+    db.settings.push({ id: 'default', ...req.body, createdAt: new Date().toISOString() });
+  } else {
+    db.settings[0] = { ...db.settings[0], ...req.body };
+  }
+  saveDB(db);
+  res.json(db.settings[0]);
+});
+
+// ===== HELP ARTICLES (CENTRE D'AIDE) =====
+app.get('/api/help-articles', (req, res) => {
+  const { search, categorie } = req.query;
+  let result = db.helpArticles || [];
+  
+  if (search) {
+    const s = search.toLowerCase();
+    result = result.filter(a => 
+      a.titre.toLowerCase().includes(s) || 
+      a.contenu.toLowerCase().includes(s)
+    );
+  }
+  
+  if (categorie) {
+    result = result.filter(a => a.categorie === categorie);
+  }
+  
+  res.json(result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+});
+
+app.get('/api/help-articles/:id', (req, res) => {
+  const article = db.helpArticles && db.helpArticles.find(a => a.id === req.params.id);
+  if (!article) return res.status(404).json({ error: 'Article non trouvé' });
+  res.json(article);
+});
+
+app.post('/api/help-articles', (req, res) => {
+  if (!db.helpArticles) db.helpArticles = [];
+  const article = { id: uuidv4(), ...req.body, createdAt: new Date().toISOString() };
+  db.helpArticles.push(article);
+  saveDB(db);
+  res.status(201).json(article);
+});
+
+app.put('/api/help-articles/:id', (req, res) => {
+  if (!db.helpArticles) db.helpArticles = [];
+  const idx = db.helpArticles.findIndex(a => a.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Article non trouvé' });
+  db.helpArticles[idx] = { ...db.helpArticles[idx], ...req.body, updatedAt: new Date().toISOString() };
+  saveDB(db);
+  res.json(db.helpArticles[idx]);
+});
+
+app.delete('/api/help-articles/:id', (req, res) => {
+  if (!db.helpArticles) db.helpArticles = [];
+  db.helpArticles = db.helpArticles.filter(a => a.id !== req.params.id);
+  saveDB(db);
+  res.json({ message: 'Article supprimé' });
+});
+
+// ===== SUPPORT TICKETS =====
+app.get('/api/support-tickets', (req, res) => {
+  const { statut } = req.query;
+  let result = db.supportTickets || [];
+  
+  if (statut) {
+    result = result.filter(t => t.statut === statut);
+  }
+  
+  res.json(result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+});
+
+app.get('/api/support-tickets/:id', (req, res) => {
+  const ticket = db.supportTickets && db.supportTickets.find(t => t.id === req.params.id);
+  if (!ticket) return res.status(404).json({ error: 'Ticket non trouvé' });
+  res.json(ticket);
+});
+
+app.post('/api/support-tickets', (req, res) => {
+  if (!db.supportTickets) db.supportTickets = [];
+  const ticket = { 
+    id: uuidv4(), 
+    ...req.body, 
+    statut: 'ouvert',
+    priorite: req.body.priorite || 'normal',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  db.supportTickets.push(ticket);
+  saveDB(db);
+  res.status(201).json(ticket);
+});
+
+app.put('/api/support-tickets/:id', (req, res) => {
+  if (!db.supportTickets) db.supportTickets = [];
+  const idx = db.supportTickets.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Ticket non trouvé' });
+  db.supportTickets[idx] = { 
+    ...db.supportTickets[idx], 
+    ...req.body, 
+    updatedAt: new Date().toISOString() 
+  };
+  saveDB(db);
+  res.json(db.supportTickets[idx]);
+});
+
+app.delete('/api/support-tickets/:id', (req, res) => {
+  if (!db.supportTickets) db.supportTickets = [];
+  db.supportTickets = db.supportTickets.filter(t => t.id !== req.params.id);
+  saveDB(db);
+  res.json({ message: 'Ticket supprimé' });
+});
 
 // AUTH
 app.post('/api/auth/login', (req, res) => {
@@ -237,5 +401,5 @@ app.post('/api/auth/login', (req, res) => {
 
 const PORT = 3001;
 app.listen(PORT, () => {
-  console.log(`🏥 Backend VacciTrack sur http://localhost:${PORT}`);
+  console.log(`[VacciTrack Backend] Server running on http://localhost:${PORT}`);
 });

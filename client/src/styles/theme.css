@@ -1,0 +1,250 @@
+/* ===== THÈME LIGHT (par défaut) ===== */
+:root[data-theme="light"],
+:root {
+  /* Couleurs primaires */
+  --color-primary: #2ecc71;
+  --color-primary-hover: #27ae60;
+  --color-primary-light: #d5f4e6;
+
+  /* Couleurs secondaires */
+  --color-secondary: #3498db;
+  --color-secondary-hover: #2980b9;
+  --color-secondary-light: #ebf5fb;
+
+  /* Couleurs neutres */
+  --color-bg-main: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #f0f0f0;
+  
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+
+  --color-border: #e0e0e0;
+  --color-border-light: #f0f0f0;
+
+  /* Couleurs de statut */
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+  --color-danger: #e74c3c;
+  --color-info: #3498db;
+
+  /* Ombres */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.04);
+
+  /* Autres */
+  --color-header-bg: #ffffff;
+  --color-sidebar-bg: #ffffff;
+}
+
+/* ===== THÈME DARK ===== */
+:root[data-theme="dark"] {
+  /* Couleurs primaires */
+  --color-primary: #2ecc71;
+  --color-primary-hover: #27ae60;
+  --color-primary-light: #1a3a2a;
+
+  /* Couleurs secondaires */
+  --color-secondary: #3498db;
+  --color-secondary-hover: #5dade2;
+  --color-secondary-light: #1b2838;
+
+  /* Couleurs neutres */
+  --color-bg-main: #1a1a1a;
+  --color-bg-secondary: #2d2d2d;
+  --color-bg-tertiary: #3a3a3a;
+  
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b0b0b0;
+  --color-text-tertiary: #808080;
+
+  --color-border: #404040;
+  --color-border-light: #2d2d2d;
+
+  /* Couleurs de statut */
+  --color-success: #27ae60;
+  --color-warning: #f39c12;
+  --color-danger: #e74c3c;
+  --color-info: #3498db;
+
+  /* Ombres */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  /* Autres */
+  --color-header-bg: #2d2d2d;
+  --color-sidebar-bg: #1a1a1a;
+}
+
+/* ===== APPLICATION DES VARIABLES ===== */
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html, body, #root {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Styles génériques qui utilisent les variables */
+.app-layout {
+  background: var(--color-bg-main);
+  color: var(--color-text-primary);
+}
+
+.main-content {
+  background: var(--color-bg-main);
+}
+
+.sidebar {
+  background: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-border);
+}
+
+header {
+  background: var(--color-header-bg) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Cards et conteneurs */
+.card,
+.settings-section,
+.article-card,
+.ticket-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.card:hover,
+.settings-section:hover,
+.article-card:hover,
+.ticket-card:hover {
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background: var(--color-bg-main);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-secondary);
+  outline: none;
+}
+
+/* Boutons */
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background: var(--color-secondary-hover);
+}
+
+/* Tables */
+table {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+/* Messages et badges */
+.badge {
+  background: var(--color-secondary-light);
+  color: var(--color-secondary);
+}
+
+.success-message {
+  background: rgba(39, 174, 96, 0.1);
+  color: var(--color-success);
+}
+
+.error-message {
+  background: rgba(231, 76, 60, 0.1);
+  color: var(--color-danger);
+}
+
+.warning-message {
+  background: rgba(243, 156, 18, 0.1);
+  color: var(--color-warning);
+}
+
+/* Navigation */
+.nav-item {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+/* Formulaires */
+.form-group label {
+  color: var(--color-text-primary);
+}
+
+.checkbox-group label {
+  color: var(--color-text-primary);
+}
+
+/* Articles et détails */
+.article-details,
+.ticket-details {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* Pages */
+.settings-container,
+.help-center-container,
+.support-container {
+  background: var(--color-bg-main);
+}
+
+/* Dashboard */
+.dashboard-card,
+.stats-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+}

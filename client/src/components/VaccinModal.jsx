@@ -160,7 +160,7 @@ function ProtocoleRage({ data, set }) {
 
            {data.erig && (
              <div style={{ background: '#f4f5f9', padding: '16px', borderRadius: '12px', border: '1px solid #eaebef' }}>
-                <h4 style={{ margin: '0 0 12px', fontSize: '14px' }}>💉 DÉTAILS DE L'IMMUNOGLOBULINE</h4>
+                <h4 style={{ margin: '0 0 12px', fontSize: '14px' }}><span className="icon-syringe" style={{ marginRight: '8px' }}></span>DÉTAILS DE L'IMMUNOGLOBULINE</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                    <div>
                       <label style={labelStyle}>Lot du Sérum</label>

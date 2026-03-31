@@ -438,7 +438,7 @@ export default function MapTlemcen() {
                             </div>
                             {patient.telephone && (
                               <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px' }}>
-                                📞 {patient.telephone}
+                                <span className="icon-phone-small"></span> {patient.telephone}
                               </div>
                             )}
                           </div>
