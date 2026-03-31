@@ -1,0 +1,16 @@
+client/node_modules
+server/node_modules
+server/__pycache__/
+server/carte de vaccination z.pdf
+node_modules/
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+node_modules/
+__pycache__/
+server/*.db
+server/*.db-shm
+server/*.db-wal
+.env
+build/

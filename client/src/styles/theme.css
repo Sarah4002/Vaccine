@@ -1,250 +1,392 @@
-/* ===== THÈME LIGHT (par défaut) ===== */
-:root[data-theme="light"],
-:root {
-  /* Couleurs primaires */
-  --color-primary: #2ecc71;
-  --color-primary-hover: #27ae60;
-  --color-primary-light: #d5f4e6;
-
-  /* Couleurs secondaires */
-  --color-secondary: #3498db;
-  --color-secondary-hover: #2980b9;
-  --color-secondary-light: #ebf5fb;
-
-  /* Couleurs neutres */
-  --color-bg-main: #ffffff;
-  --color-bg-secondary: #f8f9fa;
-  --color-bg-tertiary: #f0f0f0;
-  
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
-
-  --color-border: #e0e0e0;
-  --color-border-light: #f0f0f0;
-
-  /* Couleurs de statut */
-  --color-success: #27ae60;
-  --color-warning: #f39c12;
-  --color-danger: #e74c3c;
-  --color-info: #3498db;
-
-  /* Ombres */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.04);
-
-  /* Autres */
-  --color-header-bg: #ffffff;
-  --color-sidebar-bg: #ffffff;
+.support-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  background: var(--bg);
+  min-height: 100vh;
 }
 
-/* ===== THÈME DARK ===== */
-:root[data-theme="dark"] {
-  /* Couleurs primaires */
-  --color-primary: #2ecc71;
-  --color-primary-hover: #27ae60;
-  --color-primary-light: #1a3a2a;
-
-  /* Couleurs secondaires */
-  --color-secondary: #3498db;
-  --color-secondary-hover: #5dade2;
-  --color-secondary-light: #1b2838;
-
-  /* Couleurs neutres */
-  --color-bg-main: #1a1a1a;
-  --color-bg-secondary: #2d2d2d;
-  --color-bg-tertiary: #3a3a3a;
-  
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #b0b0b0;
-  --color-text-tertiary: #808080;
-
-  --color-border: #404040;
-  --color-border-light: #2d2d2d;
-
-  /* Couleurs de statut */
-  --color-success: #27ae60;
-  --color-warning: #f39c12;
-  --color-danger: #e74c3c;
-  --color-info: #3498db;
-
-  /* Ombres */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-
-  /* Autres */
-  --color-header-bg: #2d2d2d;
-  --color-sidebar-bg: #1a1a1a;
+.support-header {
+  margin-bottom: 32px;
 }
 
-/* ===== APPLICATION DES VARIABLES ===== */
-body {
-  background-color: var(--color-bg-main);
-  color: var(--color-text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+.support-header h1 {
+  font-family: var(--font-head);
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  color: var(--text);
+  letter-spacing: -0.5px;
 }
 
-html, body, #root {
-  transition: background-color 0.3s ease, color 0.3s ease;
+.support-header p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
 }
 
-/* Styles génériques qui utilisent les variables */
-.app-layout {
-  background: var(--color-bg-main);
-  color: var(--color-text-primary);
+.support-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
 }
 
-.main-content {
-  background: var(--color-bg-main);
-}
-
-.sidebar {
-  background: var(--color-sidebar-bg);
-  border-right: 1px solid var(--color-border);
-}
-
-header {
-  background: var(--color-header-bg) !important;
-  border: 1px solid var(--color-border) !important;
-}
-
-/* Cards et conteneurs */
-.card,
-.settings-section,
-.article-card,
-.ticket-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-}
-
-.card:hover,
-.settings-section:hover,
-.article-card:hover,
-.ticket-card:hover {
-  border-color: var(--color-secondary);
-  box-shadow: var(--shadow-md);
-}
-
-/* Inputs */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-textarea,
-select {
-  background: var(--color-bg-main);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--color-secondary);
-  outline: none;
-}
-
-/* Boutons */
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
+.btn {
+  padding: 10px 20px;
   border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-hover);
+  background: var(--accent2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
-.btn-secondary {
-  background: var(--color-secondary);
+.btn-primary.active {
+  background: var(--danger);
+}
+
+.btn-success {
+  background: var(--success);
   color: white;
-  border: none;
 }
 
-.btn-secondary:hover {
-  background: var(--color-secondary-hover);
+.btn-success:hover {
+  background: var(--success);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Tables */
-table {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
+.status-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-tr {
-  border-bottom: 1px solid var(--color-border);
+.filter-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-th {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
+.filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 86, 255, 0.05);
 }
 
-/* Messages et badges */
-.badge {
-  background: var(--color-secondary-light);
-  color: var(--color-secondary);
+.filter-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
-.success-message {
-  background: rgba(39, 174, 96, 0.1);
-  color: var(--color-success);
+.support-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 28px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-sm);
 }
 
-.error-message {
-  background: rgba(231, 76, 60, 0.1);
-  color: var(--color-danger);
+.support-form h2 {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0 0 24px 0;
+  color: var(--text);
+  letter-spacing: -0.3px;
 }
 
-.warning-message {
-  background: rgba(243, 156, 18, 0.1);
-  color: var(--color-warning);
+.form-group {
+  margin-bottom: 20px;
 }
 
-/* Navigation */
-.nav-item {
-  color: var(--color-text-secondary);
-  background: transparent;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-/* Formulaires */
 .form-group label {
-  color: var(--color-text-primary);
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
 }
 
-.checkbox-group label {
-  color: var(--color-text-primary);
+.input-text,
+.input-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg-card2);
+  transition: border-color 0.2s;
 }
 
-/* Articles et détails */
-.article-details,
+.input-text:focus,
+.input-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 86, 255, 0.1);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.input-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--bg-card2);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.input-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.no-tickets {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.tickets-content {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.ticket-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.ticket-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.ticket-card.selected {
+  border-color: var(--accent);
+  background: rgba(0, 86, 255, 0.05);
+  box-shadow: var(--shadow);
+}
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ticket-badge {
+  font-size: 16px;
+}
+
+.ticket-card h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.priority-badge {
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ticket-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .ticket-details {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 28px;
+  position: relative;
+  box-shadow: var(--shadow-sm);
 }
 
-/* Pages */
-.settings-container,
-.help-center-container,
-.support-container {
-  background: var(--color-bg-main);
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
 }
 
-/* Dashboard */
-.dashboard-card,
-.stats-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+.close-btn:hover {
+  color: var(--text);
+}
+
+.ticket-details h2 {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.ticket-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(0, 86, 255, 0.12);
+  color: var(--accent);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.priority {
+  color: white;
+  background: var(--danger);
+}
+
+.ticket-dates {
+  background: var(--bg-card2);
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.ticket-dates p {
+  margin: 4px 0;
+  color: var(--text-muted);
+}
+
+.ticket-dates strong {
+  color: var(--text);
+}
+
+.ticket-description {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ticket-description h3 {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--text);
+}
+
+.ticket-description p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ticket-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket-actions label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+@media (max-width: 768px) {
+  .tickets-content {
+    grid-template-columns: 1fr;
+  }
+
+  .tickets-list {
+    max-height: 400px;
+  }
+
+  .support-controls {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .support-header h1 {
+    font-size: 24px;
+  }
 }
