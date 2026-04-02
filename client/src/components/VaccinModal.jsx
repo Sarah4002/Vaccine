@@ -137,7 +137,7 @@ function MpviSection({ data = {}, onChange }) {
   return (
     <div style={{ border: '1px solid #fde68a', borderRadius: 14, overflow: 'hidden', marginBottom: 2 }}>
       <div style={{ background: '#fffbeb', borderBottom: '1px solid #fde68a', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 16 }}>⚠️</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: '#92400e' }}>ALERTE</span>
         <span style={{ fontWeight: 800, fontSize: 12, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
           MPVI — Manifestations Post-Vaccinales Indesirables
         </span>
@@ -232,7 +232,7 @@ function MpviSection({ data = {}, onChange }) {
           {data.mpviMajeur === 'oui' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '14px' }}>
               <div style={{ padding: '8px 12px', background: '#fee2e2', borderRadius: 8, fontSize: 11, color: '#991b1b', fontWeight: 700 }}>
-                🚨 Effet majeur — Notification obligatoire au centre de pharmacovigilance
+                Effet majeur — Notification obligatoire au centre de pharmacovigilance
               </div>
               <div>
                 <label style={labelStyle}>Type(s) d'effet majeur</label>
@@ -389,7 +389,7 @@ function GrippeSection({ grippe, setGrippe }) {
       {/* Prevision annuelle */}
       <div style={{ border: '1px solid #e9d5ff', borderRadius: 14, overflow: 'hidden' }}>
         <div style={{ background: '#faf5ff', borderBottom: '1px solid #e9d5ff', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>📅</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: '#7c3aed' }}>PREVISION</span>
           <span style={{ fontWeight: 800, fontSize: 12, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             Guide de Prevision — Campagne Annuelle {nextYear}-{nextYear+1}
           </span>

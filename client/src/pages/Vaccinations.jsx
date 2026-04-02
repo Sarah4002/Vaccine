@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useI18n } from '../i18n';
 import { api } from '../utils/api';
 import VaccinModal, { PROTOCOLES } from '../components/VaccinModal';
 
 // --- LISTE PRINCIPALE ---
 
 export default function Vaccinations({ selectedPatient, setSelectedPatient }) {
+  const { t } = useI18n();
   const [vaccinations, setVaccinations] = useState([]);
   const [patients, setPatients] = useState([]);
   const [modal, setModal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -30,40 +33,61 @@ export default function Vaccinations({ selectedPatient, setSelectedPatient }) {
     }
   };
 
+  const filteredVaccinations = vaccinations.filter(v => {
+    const s = search.toLowerCase();
+    return (
+      (v.patient || '').toLowerCase().includes(s) ||
+      (v.type || '').toLowerCase().includes(s) ||
+      (v.vaccin || '').toLowerCase().includes(s)
+    );
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Certificats & Protocoles</h1>
-          <p style={{ color: '#8a94a6', fontSize: 14 }}>Registres officiels Anti-Rabique, Hépatite B et DT.</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>{t('vac_cert_title') || 'Certificats & Protocoles'}</h1>
+          <p style={{ color: '#8a94a6', fontSize: 14 }}>{t('vac_cert_sub') || 'Registres officiels Anti-Rabique, Hépatite B et DT.'}</p>
         </div>
         <button onClick={() => setModal('create')} style={{ background: '#0056ff', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,86,255,0.2)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l-2 2 4 4 2-2-4-4z"></path><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z"></path><line x1="14" y1="10" x2="4" y2="20"></line></svg>
-          Saisir un Registre
+          {t('vac_add_reg') || 'Saisir un Registre'}
         </button>
       </div>
 
       <div className="card" style={{ border: 'none', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{t('vac_registers') || 'Registres'} ({filteredVaccinations.length})</h3>
+          <div style={{ position: 'relative', width: '350px' }}>
+            <svg style={{ position: 'absolute', left: 16, top: 10, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder={t('vac_search') || "Rechercher un patient ou un vaccin…"}
+              value={search} onChange={e => setSearch(e.target.value)}
+              style={{ padding: '10px 16px 10px 42px', borderRadius: '50px', border: '1px solid #eaebef', background: '#f4f5f9', outline: 'none', fontSize: 13, width: '100%', color: '#1d2129' }} />
+          </div>
+        </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>Chargement...</div>
-        ) : vaccinations.length === 0 ? (
+        ) : filteredVaccinations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8a94a6', background: '#f4f5f9', borderRadius: '12px' }}>
-            Aucun certificat enregistré.
+            Aucun certificat trouvé.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ color: '#8a94a6', borderBottom: '1px solid #eaebef' }}>
-                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date Initiale</th>
-                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Patient</th>
-                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type de Registre</th>
-                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Détails Profil</th>
+                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('vac_date_init') || 'Date Initiale'}</th>
+                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('vac_patient_col') || 'Patient'}</th>
+                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('vac_reg_type') || 'Type de Registre'}</th>
+                  <th style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('vac_prof_details') || 'Détails Profil'}</th>
                   <th style={{ padding: '16px 8px', textAlign: 'right' }}></th>
                 </tr>
               </thead>
               <tbody>
-                {vaccinations.map((v, i) => {
+                {filteredVaccinations.map((v, i) => {
                   return (
                     <tr key={v.id} style={{ borderBottom: i < vaccinations.length-1 ? '1px solid #eaebef' : 'none' }}>
                       <td style={{ padding: '16px 8px', fontWeight: 600, fontSize: 13, color: '#1d2129' }}>

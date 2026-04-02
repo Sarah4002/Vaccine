@@ -107,6 +107,58 @@ function initDB() {
     )
   `);
 
+  // ── Stock Movements ─────────────────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS stock_movements (
+      id               TEXT PRIMARY KEY,
+      stockId          TEXT NOT NULL,
+      type             TEXT NOT NULL, -- 'ENTREE', 'SORTIE', 'AJUSTEMENT'
+      quantite         INTEGER NOT NULL,
+      patientId        TEXT,
+      motif            TEXT,
+      createdAt        TEXT NOT NULL,
+      FOREIGN KEY (stockId) REFERENCES stocks(id) ON DELETE CASCADE,
+      FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE SET NULL
+    )
+  `);
+
+  // ── Support Tickets ───────────────────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id          TEXT PRIMARY KEY,
+      titre       TEXT NOT NULL,
+      description TEXT NOT NULL,
+      categorie   TEXT DEFAULT 'Question',
+      priorite    TEXT DEFAULT 'normal',
+      statut      TEXT DEFAULT 'ouvert',
+      createdAt   TEXT NOT NULL,
+      updatedAt   TEXT NOT NULL
+    )
+  `);
+
+  // ── Help Articles ─────────────────────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS help_articles (
+      id        TEXT PRIMARY KEY,
+      titre     TEXT NOT NULL,
+      description TEXT,
+      contenu   TEXT NOT NULL,
+      categorie TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    )
+  `);
+
+  // ── Seed Help Articles if empty ───────────────────────────────────────────
+  const helpCount = db.prepare('SELECT COUNT(*) as n FROM help_articles').get().n;
+  if (helpCount === 0) {
+    const now = new Date().toISOString();
+    const helpStmt = db.prepare('INSERT INTO help_articles (id, titre, contenu, categorie, createdAt) VALUES (?,?,?,?,?)');
+    helpStmt.run('h1', 'Guide de Vaccination Anti-Rabique', '<p>Le protocole dépend du <b>grade</b> de la morsure :</p><ul><li><b>Grade I</b>: Léchage sur peau intacte.</li><li><b>Grade II</b>: Morsure mineure.</li><li><b>Grade III</b>: Morsure transdermique.</li></ul>', 'Vaccinations', now);
+    helpStmt.run('h2', 'Gestion des Stocks FEFO', '<p>Utilisez toujours les vaccins avec la date de péremption la plus proche en premier (<b>First Expired First Out</b>).</p>', 'Pharmacie', now);
+    helpStmt.run('h3', 'Utilisation de la Carte SIG', '<p>La carte SIG permet de visualiser la répartition des patients. Utilisez les filtres pour affiner l\'analyse par commune.</p>', 'Carte', now);
+    console.log('🌱 Articles d\'aide insérés');
+  }
+
   // ── Migration depuis db.json ou seed ──────────────────────────────────────
   const count = db.prepare('SELECT COUNT(*) as n FROM patients').get().n;
   if (count === 0 && fs.existsSync(JSON_PATH)) {
@@ -187,6 +239,15 @@ function seedDefaultData() {
             'Oran, Algérie','A+','75','Médecin','SEMEP',?)
   `).run(now);
   console.log('🌱 Données initiales insérées');
+
+  // Help Articles Seed
+  const helpCount = db.prepare('SELECT COUNT(*) as n FROM help_articles').get().n;
+  if (helpCount === 0) {
+    const helpStmt = db.prepare('INSERT INTO help_articles (id, titre, contenu, categorie, createdAt) VALUES (?,?,?,?,?)');
+    helpStmt.run('h1', 'Guide de Vaccination Anti-Rabique', 'Le protocole dépend du grade de la morsure (I, II ou III). Consultez la carte SIG pour voir les zones à risque.', 'Vaccinations', now);
+    helpStmt.run('h2', 'Gestion des Stocks FEFO', 'Utilisez toujours les vaccins avec la date de péremption la plus proche en premier (First Expired First Out).', 'Pharmacie', now);
+    helpStmt.run('h3', 'Utilisation de la Carte SIG', 'La carte SIG Tlemcen permet de visualiser la densité de patients par commune. Cliquez sur une commune pour voir les détails.', 'Carte', now);
+  }
 }
 
 // ── Récupérer DB ──────────────────────────────────────────────────────────

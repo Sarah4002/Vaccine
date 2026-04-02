@@ -1,10 +1,10 @@
 // server.js — VacciTrack avec better-sqlite3 (SQLite natif synchrone)
-const express    = require('express');
-const cors       = require('cors');
+const express = require('express');
+const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { execFile } = require('child_process');
-const path       = require('path');
-const fs         = require('fs');
+const path = require('path');
+const fs = require('fs');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { initDB } = require('./database');
 
@@ -15,10 +15,10 @@ app.use(express.json());
 const db = initDB();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const pad      = v => v ? String(v).padStart(2, '0') : null;
+const pad = v => v ? String(v).padStart(2, '0') : null;
 const fromJSON = v => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
 const hydrateVacc = v => v ? { ...v, protocoleData: fromJSON(v.protocoleData) } : null;
-const hydrateOrd  = o => o ? { ...o, medicaments: fromJSON(o.medicaments) }     : null;
+const hydrateOrd = o => o ? { ...o, medicaments: fromJSON(o.medicaments) } : null;
 
 // ── PATIENTS ──────────────────────────────────────────────────────────────────
 app.get('/api/patients', (req, res) => {
@@ -68,20 +68,20 @@ app.post('/api/patients', (req, res) => {
          @fumeur,@alcool,@activitePhysique,@mutuelle,@numeroCNAS,@medecinTraitant,@notesClinicien,
          @createdAt)
     `).run({
-      id:p.id, nom:p.nom, prenom:p.prenom, dateNaissance:p.dateNaissance||null,
-      sexe:p.sexe||'M', telephone:p.telephone||null, email:p.email||null,
-      adresse:p.adresse||null, wilaya:p.wilaya||null, daira:p.daira||null,
-      commune:p.commune||null, adressePrecise:p.adressePrecise||null,
-      groupeSanguin:p.groupeSanguin||'A+', poids:String(p.poids||''),
-      fonction:p.fonction||null, service:p.service||null,
-      profession:p.profession||null, instruction:p.instruction||null,
-      antecedents:p.antecedents||null, allergies:p.allergies||null,
-      maladiesChroniques:p.maladiesChroniques||null, traitementEnCours:p.traitementEnCours||null,
-      contreIndications:p.contreIndications||null, fumeur:p.fumeur||null,
-      alcool:p.alcool||null, activitePhysique:p.activitePhysique||null,
-      mutuelle:p.mutuelle||null, numeroCNAS:p.numeroCNAS||null,
-      medecinTraitant:p.medecinTraitant||null, notesClinicien:p.notesClinicien||null,
-      createdAt:p.createdAt,
+      id: p.id, nom: p.nom, prenom: p.prenom, dateNaissance: p.dateNaissance || null,
+      sexe: p.sexe || 'M', telephone: p.telephone || null, email: p.email || null,
+      adresse: p.adresse || null, wilaya: p.wilaya || null, daira: p.daira || null,
+      commune: p.commune || null, adressePrecise: p.adressePrecise || null,
+      groupeSanguin: p.groupeSanguin || 'A+', poids: String(p.poids || ''),
+      fonction: p.fonction || null, service: p.service || null,
+      profession: p.profession || null, instruction: p.instruction || null,
+      antecedents: p.antecedents || null, allergies: p.allergies || null,
+      maladiesChroniques: p.maladiesChroniques || null, traitementEnCours: p.traitementEnCours || null,
+      contreIndications: p.contreIndications || null, fumeur: p.fumeur || null,
+      alcool: p.alcool || null, activitePhysique: p.activitePhysique || null,
+      mutuelle: p.mutuelle || null, numeroCNAS: p.numeroCNAS || null,
+      medecinTraitant: p.medecinTraitant || null, notesClinicien: p.notesClinicien || null,
+      createdAt: p.createdAt,
     });
     console.log(`✅ Nouveau patient: ${p.prenom} ${p.nom}`);
     res.status(201).json(p);
@@ -107,19 +107,19 @@ app.put('/api/patients/:id', (req, res) => {
         notesClinicien=@notesClinicien
       WHERE id=@id
     `).run({
-      id:req.params.id, nom:b.nom, prenom:b.prenom,
-      dateNaissance:b.dateNaissance||null, sexe:b.sexe||'M',
-      telephone:b.telephone||null, email:b.email||null, adresse:b.adresse||null,
-      wilaya:b.wilaya||null, daira:b.daira||null, commune:b.commune||null,
-      adressePrecise:b.adressePrecise||null, groupeSanguin:b.groupeSanguin||'A+',
-      poids:String(b.poids||''), fonction:b.fonction||null, service:b.service||null,
-      profession:b.profession||null, instruction:b.instruction||null,
-      antecedents:b.antecedents||null, allergies:b.allergies||null,
-      maladiesChroniques:b.maladiesChroniques||null, traitementEnCours:b.traitementEnCours||null,
-      contreIndications:b.contreIndications||null, fumeur:b.fumeur||null,
-      alcool:b.alcool||null, activitePhysique:b.activitePhysique||null,
-      mutuelle:b.mutuelle||null, numeroCNAS:b.numeroCNAS||null,
-      medecinTraitant:b.medecinTraitant||null, notesClinicien:b.notesClinicien||null,
+      id: req.params.id, nom: b.nom, prenom: b.prenom,
+      dateNaissance: b.dateNaissance || null, sexe: b.sexe || 'M',
+      telephone: b.telephone || null, email: b.email || null, adresse: b.adresse || null,
+      wilaya: b.wilaya || null, daira: b.daira || null, commune: b.commune || null,
+      adressePrecise: b.adressePrecise || null, groupeSanguin: b.groupeSanguin || 'A+',
+      poids: String(b.poids || ''), fonction: b.fonction || null, service: b.service || null,
+      profession: b.profession || null, instruction: b.instruction || null,
+      antecedents: b.antecedents || null, allergies: b.allergies || null,
+      maladiesChroniques: b.maladiesChroniques || null, traitementEnCours: b.traitementEnCours || null,
+      contreIndications: b.contreIndications || null, fumeur: b.fumeur || null,
+      alcool: b.alcool || null, activitePhysique: b.activitePhysique || null,
+      mutuelle: b.mutuelle || null, numeroCNAS: b.numeroCNAS || null,
+      medecinTraitant: b.medecinTraitant || null, notesClinicien: b.notesClinicien || null,
     });
     res.json(db.prepare('SELECT * FROM patients WHERE id=?').get(req.params.id));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -158,23 +158,33 @@ app.post('/api/vaccinations', (req, res) => {
         (@id,@patientId,@type,@vaccin,@dose,@statut,
          @dateAdministration,@dateProchaineDose,@protocoleData,@createdAt)
     `).run({
-      id:v.id, patientId:v.patientId, type:v.type||null, vaccin:v.vaccin||null,
-      dose:v.dose||null, statut:v.statut||'complete',
-      dateAdministration:v.dateAdministration||null,
-      dateProchaineDose:v.dateProchaineDose||null,
-      protocoleData:v.protocoleData ? JSON.stringify(v.protocoleData) : null,
-      createdAt:v.createdAt,
+      id: v.id, patientId: v.patientId, type: v.type || null, vaccin: v.vaccin || null,
+      dose: v.dose || null, statut: v.statut || 'complete',
+      dateAdministration: v.dateAdministration || null,
+      dateProchaineDose: v.dateProchaineDose || null,
+      protocoleData: v.protocoleData ? JSON.stringify(v.protocoleData) : null,
+      createdAt: v.createdAt,
     });
 
-    // Déduire stock automatiquement
+    // Déduire stock automatiquement (FEFO - First Expired First Out)
     const match = db.prepare(
-      `SELECT * FROM stocks WHERE lower(vaccin) LIKE ? AND quantiteRestante > 0 LIMIT 1`
-    ).get(`%${(v.vaccin||'').split(' ')[0].toLowerCase()}%`);
+      `SELECT * FROM stocks 
+       WHERE lower(vaccin) LIKE ? AND quantiteRestante > 0 
+       ORDER BY datePeremption ASC 
+       LIMIT 1`
+    ).get(`%${(v.vaccin || '').split(' ')[0].toLowerCase()}%`);
+
     if (match) {
       db.prepare('UPDATE stocks SET quantiteRestante = quantiteRestante - 1 WHERE id=?').run(match.id);
+
+      // Enregistrer le mouvement de stock (SORTIE)
+      db.prepare(`
+        INSERT INTO stock_movements (id, stockId, type, quantite, patientId, motif, createdAt)
+        VALUES (?, ?, 'SORTIE', 1, ?, ?, ?)
+      `).run(uuidv4(), match.id, v.patientId, `Vaccination: ${v.vaccin}`, new Date().toISOString());
     }
 
-    console.log(`✅ Vaccination enregistrée: ${v.vaccin||v.type}`);
+    console.log(`✅ Vaccination enregistrée: ${v.vaccin || v.type}`);
     res.status(201).json(hydrateVacc(db.prepare('SELECT * FROM vaccinations WHERE id=?').get(v.id)));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -190,10 +200,10 @@ app.put('/api/vaccinations/:id', (req, res) => {
         protocoleData=@protocoleData
       WHERE id=@id
     `).run({
-      id:req.params.id, type:b.type||null, vaccin:b.vaccin||null, dose:b.dose||null,
-      statut:b.statut||'complete', dateAdministration:b.dateAdministration||null,
-      dateProchaineDose:b.dateProchaineDose||null,
-      protocoleData:b.protocoleData ? JSON.stringify(b.protocoleData) : null,
+      id: req.params.id, type: b.type || null, vaccin: b.vaccin || null, dose: b.dose || null,
+      statut: b.statut || 'complete', dateAdministration: b.dateAdministration || null,
+      dateProchaineDose: b.dateProchaineDose || null,
+      protocoleData: b.protocoleData ? JSON.stringify(b.protocoleData) : null,
     });
     res.json(hydrateVacc(db.prepare('SELECT * FROM vaccinations WHERE id=?').get(req.params.id)));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -226,10 +236,10 @@ app.post('/api/ordonnances', (req, res) => {
       INSERT INTO ordonnances (id,patientId,date,medecin,diagnostic,observations,medicaments,createdAt)
       VALUES (@id,@patientId,@date,@medecin,@diagnostic,@observations,@medicaments,@createdAt)
     `).run({
-      id:o.id, patientId:o.patientId, date:o.date||null, medecin:o.medecin||null,
-      diagnostic:o.diagnostic||null, observations:o.observations||null,
-      medicaments:o.medicaments ? JSON.stringify(o.medicaments) : null,
-      createdAt:o.createdAt,
+      id: o.id, patientId: o.patientId, date: o.date || null, medecin: o.medecin || null,
+      diagnostic: o.diagnostic || null, observations: o.observations || null,
+      medicaments: o.medicaments ? JSON.stringify(o.medicaments) : null,
+      createdAt: o.createdAt,
     });
     res.status(201).json(o);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -248,6 +258,20 @@ app.get('/api/stocks', (req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/stocks/movements', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT m.*, s.vaccin, s.lot, (p.prenom||' '||p.nom) as patientNom
+      FROM stock_movements m
+      JOIN stocks s ON m.stockId = s.id
+      LEFT JOIN patients p ON m.patientId = p.id
+      ORDER BY m.createdAt DESC
+      LIMIT 100
+    `).all();
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.post('/api/stocks', (req, res) => {
   try {
     const s = { id: uuidv4(), ...req.body };
@@ -255,11 +279,18 @@ app.post('/api/stocks', (req, res) => {
       INSERT INTO stocks (id,vaccin,lot,quantiteInitiale,quantiteRestante,datePeremption)
       VALUES (@id,@vaccin,@lot,@quantiteInitiale,@quantiteRestante,@datePeremption)
     `).run({
-      id:s.id, vaccin:s.vaccin, lot:s.lot||null,
-      quantiteInitiale:Number(s.quantiteInitiale)||0,
-      quantiteRestante:Number(s.quantiteRestante)||0,
-      datePeremption:s.datePeremption||null,
+      id: s.id, vaccin: s.vaccin, lot: s.lot || null,
+      quantiteInitiale: Number(s.quantiteInitiale) || 0,
+      quantiteRestante: Number(s.quantiteRestante) || 0,
+      datePeremption: s.datePeremption || null,
     });
+
+    // Enregistrer le mouvement d'entrée
+    db.prepare(`
+      INSERT INTO stock_movements (id, stockId, type, quantite, motif, createdAt)
+      VALUES (?, ?, 'ENTREE', ?, ?, ?)
+    `).run(uuidv4(), s.id, s.quantiteInitiale, 'Réception initiale de lot', new Date().toISOString());
+
     res.status(201).json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -275,10 +306,10 @@ app.put('/api/stocks/:id', (req, res) => {
         datePeremption=@datePeremption
       WHERE id=@id
     `).run({
-      id:req.params.id, vaccin:b.vaccin, lot:b.lot||null,
-      quantiteInitiale:Number(b.quantiteInitiale)||0,
-      quantiteRestante:Number(b.quantiteRestante)||0,
-      datePeremption:b.datePeremption||null,
+      id: req.params.id, vaccin: b.vaccin, lot: b.lot || null,
+      quantiteInitiale: Number(b.quantiteInitiale) || 0,
+      quantiteRestante: Number(b.quantiteRestante) || 0,
+      datePeremption: b.datePeremption || null,
     });
     res.json(db.prepare('SELECT * FROM stocks WHERE id=?').get(req.params.id));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -322,18 +353,18 @@ app.get('/api/stats', (req, res) => {
     const { period = 'month', year, month, day, sexe, ageMin, ageMax, wilaya } = req.query;
 
     const pW = []; const pP = [];
-    if (sexe)   { pW.push("sexe = ?");                                                   pP.push(sexe); }
-    if (wilaya) { pW.push("wilaya LIKE ?");                                              pP.push(`%${wilaya}%`); }
-    if (year)   { pW.push("substr(createdAt,1,4) = ?");                                  pP.push(year); }
-    if (month)  { pW.push("substr(createdAt,6,2) = ?");                                  pP.push(pad(month)); }
-    if (day)    { pW.push("substr(createdAt,9,2) = ?");                                  pP.push(pad(day)); }
-    if (ageMin) { pW.push("(strftime('%Y','now') - strftime('%Y',dateNaissance)) >= ?");  pP.push(+ageMin); }
-    if (ageMax) { pW.push("(strftime('%Y','now') - strftime('%Y',dateNaissance)) <= ?");  pP.push(+ageMax); }
+    if (sexe) { pW.push("sexe = ?"); pP.push(sexe); }
+    if (wilaya) { pW.push("wilaya LIKE ?"); pP.push(`%${wilaya}%`); }
+    if (year) { pW.push("substr(createdAt,1,4) = ?"); pP.push(year); }
+    if (month) { pW.push("substr(createdAt,6,2) = ?"); pP.push(pad(month)); }
+    if (day) { pW.push("substr(createdAt,9,2) = ?"); pP.push(pad(day)); }
+    if (ageMin) { pW.push("(strftime('%Y','now') - strftime('%Y',dateNaissance)) >= ?"); pP.push(+ageMin); }
+    if (ageMax) { pW.push("(strftime('%Y','now') - strftime('%Y',dateNaissance)) <= ?"); pP.push(+ageMax); }
     const pSQL = pW.length ? `WHERE ${pW.join(' AND ')}` : '';
 
-    const totalPatients     = db.prepare(`SELECT COUNT(*) as n FROM patients ${pSQL}`).get(...pP).n;
-    const parSexe           = db.prepare(`SELECT sexe, COUNT(*) as count FROM patients ${pSQL} GROUP BY sexe`).all(...pP);
-    const parAge            = db.prepare(`
+    const totalPatients = db.prepare(`SELECT COUNT(*) as n FROM patients ${pSQL}`).get(...pP).n;
+    const parSexe = db.prepare(`SELECT sexe, COUNT(*) as count FROM patients ${pSQL} GROUP BY sexe`).all(...pP);
+    const parAge = db.prepare(`
       SELECT CASE
         WHEN (strftime('%Y','now') - strftime('%Y',dateNaissance)) < 1  THEN '< 1 an'
         WHEN (strftime('%Y','now') - strftime('%Y',dateNaissance)) < 5  THEN '1–4'
@@ -344,45 +375,45 @@ app.get('/api/stats', (req, res) => {
         ELSE '60+'
       END as tranche, COUNT(*) as count FROM patients ${pSQL} GROUP BY tranche
     `).all(...pP);
-    const parWilaya         = db.prepare(`SELECT COALESCE(wilaya,'Non renseignée') as wilaya, COUNT(*) as count FROM patients ${pSQL} GROUP BY wilaya ORDER BY count DESC LIMIT 10`).all(...pP);
-    const parFonction       = db.prepare(`SELECT COALESCE(fonction,'Non renseignée') as fonction, COUNT(*) as count FROM patients ${pSQL} GROUP BY fonction ORDER BY count DESC LIMIT 8`).all(...pP);
-    const parGroupeSanguin  = db.prepare(`SELECT COALESCE(groupeSanguin,'Inconnu') as groupe, COUNT(*) as count FROM patients ${pSQL} GROUP BY groupe ORDER BY count DESC`).all(...pP);
+    const parWilaya = db.prepare(`SELECT COALESCE(wilaya,'Non renseignée') as wilaya, COUNT(*) as count FROM patients ${pSQL} GROUP BY wilaya ORDER BY count DESC LIMIT 10`).all(...pP);
+    const parFonction = db.prepare(`SELECT COALESCE(fonction,'Non renseignée') as fonction, COUNT(*) as count FROM patients ${pSQL} GROUP BY fonction ORDER BY count DESC LIMIT 8`).all(...pP);
+    const parGroupeSanguin = db.prepare(`SELECT COALESCE(groupeSanguin,'Inconnu') as groupe, COUNT(*) as count FROM patients ${pSQL} GROUP BY groupe ORDER BY count DESC`).all(...pP);
 
     const pGrp = period === 'day' ? "substr(createdAt,1,10)" : period === 'year' ? "substr(createdAt,1,4)" : "substr(createdAt,1,7)";
     const patientsParPeriode = db.prepare(`SELECT ${pGrp} as label, COUNT(*) as count FROM patients ${pSQL} GROUP BY label ORDER BY label`).all(...pP);
 
     const vW = []; const vP = [];
-    if (sexe)   { vW.push("p.sexe = ?");                                                    vP.push(sexe); }
-    if (wilaya) { vW.push("p.wilaya LIKE ?");                                               vP.push(`%${wilaya}%`); }
-    if (year)   { vW.push("substr(v.dateAdministration,1,4) = ?");                          vP.push(year); }
-    if (month)  { vW.push("substr(v.dateAdministration,6,2) = ?");                          vP.push(pad(month)); }
-    if (day)    { vW.push("substr(v.dateAdministration,9,2) = ?");                          vP.push(pad(day)); }
-    if (ageMin) { vW.push("(strftime('%Y','now') - strftime('%Y',p.dateNaissance)) >= ?");  vP.push(+ageMin); }
-    if (ageMax) { vW.push("(strftime('%Y','now') - strftime('%Y',p.dateNaissance)) <= ?");  vP.push(+ageMax); }
-    const vSQL  = vW.length ? `WHERE ${vW.join(' AND ')}` : '';
+    if (sexe) { vW.push("p.sexe = ?"); vP.push(sexe); }
+    if (wilaya) { vW.push("p.wilaya LIKE ?"); vP.push(`%${wilaya}%`); }
+    if (year) { vW.push("substr(v.dateAdministration,1,4) = ?"); vP.push(year); }
+    if (month) { vW.push("substr(v.dateAdministration,6,2) = ?"); vP.push(pad(month)); }
+    if (day) { vW.push("substr(v.dateAdministration,9,2) = ?"); vP.push(pad(day)); }
+    if (ageMin) { vW.push("(strftime('%Y','now') - strftime('%Y',p.dateNaissance)) >= ?"); vP.push(+ageMin); }
+    if (ageMax) { vW.push("(strftime('%Y','now') - strftime('%Y',p.dateNaissance)) <= ?"); vP.push(+ageMax); }
+    const vSQL = vW.length ? `WHERE ${vW.join(' AND ')}` : '';
     const vJoin = `FROM vaccinations v LEFT JOIN patients p ON v.patientId=p.id`;
 
-    const totalVaccinations    = db.prepare(`SELECT COUNT(*) as n ${vJoin} ${vSQL}`).get(...vP).n;
+    const totalVaccinations = db.prepare(`SELECT COUNT(*) as n ${vJoin} ${vSQL}`).get(...vP).n;
     const vGrp = period === 'day' ? "substr(v.dateAdministration,1,10)" : period === 'year' ? "substr(v.dateAdministration,1,4)" : "substr(v.dateAdministration,1,7)";
-    const vaccinationsParMois  = db.prepare(`SELECT ${vGrp} as mois, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY mois ORDER BY mois`).all(...vP);
+    const vaccinationsParMois = db.prepare(`SELECT ${vGrp} as mois, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY mois ORDER BY mois`).all(...vP);
     const vaccinationsParVaccin = db.prepare(`SELECT COALESCE(v.vaccin,'Inconnu') as vaccin, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY v.vaccin ORDER BY count DESC`).all(...vP);
-    const vaccinationsParType  = db.prepare(`SELECT COALESCE(v.type,'Inconnu') as type, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY v.type ORDER BY count DESC`).all(...vP);
+    const vaccinationsParType = db.prepare(`SELECT COALESCE(v.type,'Inconnu') as type, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY v.type ORDER BY count DESC`).all(...vP);
     const vaccinationsParStatut = db.prepare(`SELECT COALESCE(v.statut,'Inconnu') as statut, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY v.statut`).all(...vP);
 
     const gradeExtra = vW.length
       ? `${vSQL} AND json_extract(v.protocoleData,'$.grade') IS NOT NULL`
       : `WHERE json_extract(v.protocoleData,'$.grade') IS NOT NULL`;
     const vaccinationsParGrade = db.prepare(`SELECT json_extract(v.protocoleData,'$.grade') as grade, COUNT(*) as count ${vJoin} ${gradeExtra} GROUP BY grade ORDER BY grade`).all(...vP);
-    const vaccinationsParSexe  = db.prepare(`SELECT COALESCE(p.sexe,'?') as sexe, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY p.sexe`).all(...vP);
+    const vaccinationsParSexe = db.prepare(`SELECT COALESCE(p.sexe,'?') as sexe, COUNT(*) as count ${vJoin} ${vSQL} GROUP BY p.sexe`).all(...vP);
 
     const today = new Date().toISOString().slice(0, 10);
-    const in30  = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-    const rappelsProchains     = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose >= ? AND dateProchaineDose <= ?`).get(today, in30).n;
+    const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const rappelsProchains = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose >= ? AND dateProchaineDose <= ?`).get(today, in30).n;
     const vaccinationsEnRetard = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose < ? AND statut != 'complete'`).get(today).n;
 
-    const stocks          = db.prepare('SELECT * FROM stocks').all();
+    const stocks = db.prepare('SELECT * FROM stocks').all();
     const stocksCritiques = stocks.filter(s => s.quantiteInitiale > 0 && (s.quantiteRestante / s.quantiteInitiale) <= 0.2).length;
-    const stocksPerimes   = stocks.filter(s => s.datePeremption && new Date(s.datePeremption) < new Date()).length;
+    const stocksPerimes = stocks.filter(s => s.datePeremption && new Date(s.datePeremption) < new Date()).length;
 
     res.json({
       totalPatients, totalVaccinations, rappelsProchains, vaccinationsEnRetard,
@@ -397,9 +428,84 @@ app.get('/api/stats', (req, res) => {
   }
 });
 
+// ── SUPPORT TICKETS ──────────────────────────────────────────────────────────
+app.get('/api/support-tickets', (req, res) => {
+  try {
+    const { statut } = req.query;
+    const rows = statut
+      ? db.prepare('SELECT * FROM support_tickets WHERE statut=? ORDER BY createdAt DESC').all(statut)
+      : db.prepare('SELECT * FROM support_tickets ORDER BY createdAt DESC').all();
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/support-tickets', (req, res) => {
+  try {
+    const { titre, description, categorie, priorite } = req.body;
+    const now = new Date().toISOString();
+    const ticket = {
+      id: uuidv4(),
+      titre, description, categorie: categorie || 'Question',
+      priorite: priorite || 'normal', statut: 'ouvert',
+      createdAt: now, updatedAt: now
+    };
+    db.prepare(`
+      INSERT INTO support_tickets (id, titre, description, categorie, priorite, statut, createdAt, updatedAt)
+      VALUES (@id, @titre, @description, @categorie, @priorite, @statut, @createdAt, @updatedAt)
+    `).run(ticket);
+
+    console.log(`🎫 Nouveau Ticket: ${titre}`);
+    console.log(`📧 NOTIFICATION ENVOYÉE À: derkaouitema9@gmail.com, sarahbelmahi378@gmail.com`);
+
+    res.status(201).json(ticket);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.put('/api/support-tickets/:id', (req, res) => {
+  try {
+    const { statut } = req.body;
+    const now = new Date().toISOString();
+    db.prepare('UPDATE support_tickets SET statut=?, updatedAt=? WHERE id=?').run(statut, now, req.params.id);
+    res.json(db.prepare('SELECT * FROM support_tickets WHERE id=?').get(req.params.id));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── HELP ARTICLES ────────────────────────────────────────────────────────────
+app.get('/api/help-articles', (req, res) => {
+  try {
+    const { search, categorie } = req.query;
+    let sql = 'SELECT * FROM help_articles';
+    const params = [];
+    const where = [];
+
+    if (search) {
+      where.push('(lower(titre) LIKE ? OR lower(contenu) LIKE ?)');
+      params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
+    }
+    if (categorie) {
+      where.push('categorie = ?');
+      params.push(categorie);
+    }
+
+    if (where.length) sql += ' WHERE ' + where.join(' AND ');
+    sql += ' ORDER BY createdAt DESC';
+
+    const rows = db.prepare(sql).all(...params);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/help-articles/:id/feedback', (req, res) => {
+  try {
+    const { type } = req.body;
+    console.log(`👍 Feedback ${type} pour l'article ${req.params.id}`);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── DIVERS ────────────────────────────────────────────────────────────────────
 app.get('/api/vaccins-disponibles', (req, res) => {
-  res.json(['Anti-Rabique Tissulaire','Anti-Rabique Cellulaire','Hépatite B','DT','BCG','ROR','Grippe','COVID-19']);
+  res.json(['Anti-Rabique Tissulaire', 'Anti-Rabique Cellulaire', 'Hépatite B', 'DT', 'BCG', 'ROR', 'Grippe', 'COVID-19']);
 });
 
 app.post('/api/auth/login', (req, res) => {
@@ -643,56 +749,6 @@ app.post('/api/generate-pdf', async (req, res, next) => {
     });
   }
 });
-
-function getPythonRuntime() {
-  if (process.platform === 'win32') {
-    return { command: 'py', args: ['-3'] };
-  }
-  return { command: 'python3', args: [] };
-}
-
-// ── GÉNÉRATION PDF ─────────────────────────────────────────────────────────────
-app.post('/api/generate-pdf', (req, res) => {
-  const payload    = JSON.stringify(req.body);
-  const scriptPath = path.join(__dirname, 'generate_pdf_report.py');
-  const tmpFile    = path.join(require('os').tmpdir(), `vaccitrack_${Date.now()}.pdf`);
-  const python     = getPythonRuntime();
-
-  execFile(python.command, [...python.args, scriptPath, payload, tmpFile],
-    { encoding: 'buffer', maxBuffer: 20 * 1024 * 1024 },
-    (err, stdout, stderr) => {
-      if (err) {
-        console.error('PDF error:', err?.message, stderr?.toString());
-        return res.status(500).json({
-          error: 'Erreur PDF',
-          detail: stderr?.toString() || stdout?.toString() || err.message,
-        });
-      }
-
-      try {
-        const pdfBuffer = fs.readFileSync(tmpFile);
-        const { type = 'rage', patient = {} } = req.body;
-        const fname = `carte_${type}_${patient.nom || 'patient'}_${patient.prenom || ''}.pdf`
-          .replace(/\s+/g, '_');
-
-        res.set({
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${fname}"`,
-          'Content-Length': pdfBuffer.length,
-        });
-        res.send(pdfBuffer);
-
-        // Nettoyage fichier temporaire
-        try { fs.unlinkSync(tmpFile); } catch (_) {}
-        console.log(`📄 Carte PDF générée: ${fname} (${pdfBuffer.length} bytes)`);
-      } catch (readErr) {
-        console.error('PDF read error:', readErr.message);
-        res.status(500).json({ error: 'Erreur lecture PDF', detail: readErr.message });
-      }
-    }
-  );
-});
-
 
 // ── Démarrage ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;

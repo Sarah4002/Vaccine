@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useI18n } from '../i18n';
 import { api } from '../utils/api';
 import VaccinModal from '../components/VaccinModal';
 import OrdonnanceModal from '../components/OrdonnanceModal';
@@ -791,7 +792,7 @@ function VaccinRow({ v, index, isLast }) {
               background: isOverdue ? '#fef2f2' : hasProchain ? '#f0fdf4' : '#f8fafc',
               padding: '3px 8px', borderRadius: 6,
             }}>
-              {isOverdue ? '⚠️' : '📅'} {formatDateShort(v.dateProchaineDose)}
+              {isOverdue ? 'Alerte' : 'Rappel'} {formatDateShort(v.dateProchaineDose)}
             </span>
           ) : (
             <span style={{ fontSize: 11, color: '#cbd5e0' }}>Pas de rappel</span>
@@ -859,9 +860,11 @@ const StatCard = ({ num, label, color = '#0056ff', bg = '#ebf2ff', icon }) => (
     padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14,
     boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
   }}>
-    <div style={{ width: 46, height: 46, borderRadius: 12, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-      {icon}
-    </div>
+    {icon && (
+      <div style={{ width: 46, height: 46, borderRadius: 12, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+        {icon}
+      </div>
+    )}
     <div>
       <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 26, fontWeight: 800, color: '#1d2129', lineHeight: 1 }}>{num}</div>
       <div style={{ fontSize: 11, color: '#8a94a6', marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.3px' }}>{label}</div>
@@ -873,9 +876,11 @@ const StatCard = ({ num, label, color = '#0056ff', bg = '#ebf2ff', icon }) => (
 const SectionCard = ({ title, icon, children, accent = '#0056ff' }) => (
   <div style={{ background: 'white', borderRadius: 16, border: '1px solid #eaebef', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
     <div style={{ padding: '14px 20px', borderBottom: '1px solid #f0f1f5', display: 'flex', alignItems: 'center', gap: 10, background: '#fafbff' }}>
-      <div style={{ width: 32, height: 32, borderRadius: 8, background: accent + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>
-        {icon}
-      </div>
+      {icon && (
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: accent + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>
+          {icon}
+        </div>
+      )}
       <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 14, color: '#1d2129' }}>{title}</span>
     </div>
     <div style={{ padding: '20px' }}>{children}</div>
@@ -1059,15 +1064,15 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
       {activeTab === 'vaccins' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-            <StatCard num={vaccinations.length} label="Total Certificats" color="#0056ff" bg="#ebf2ff" icon="💉" />
-            <StatCard num={vaccsByType.rage}     label="Anti-Rabique"    color="#c2410c" bg="#fff7ed" icon="🐾" />
-            <StatCard num={vaccsByType.hepb}     label="Hépatite B"      color="#16a34a" bg="#f0fdf4" icon="🔬" />
-            <StatCard num={vaccsByType.dt}        label="DT"              color="#1d4ed8" bg="#eff6ff" icon="🛡️" />
+            <StatCard num={vaccinations.length} label="Total Certificats" color="#0056ff" bg="#ebf2ff" icon="" />
+            <StatCard num={vaccsByType.rage}     label="Anti-Rabique"    color="#c2410c" bg="#fff7ed" icon="" />
+            <StatCard num={vaccsByType.hepb}     label="Hépatite B"      color="#16a34a" bg="#f0fdf4" icon="" />
+            <StatCard num={vaccsByType.dt}        label="DT"              color="#1d4ed8" bg="#eff6ff" icon="" />
           </div>
 
           {nextDose && (
             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 28 }}>📅</div>
+              <div style={{ fontSize: 28 }}>Rappel</div>
               <div>
                 <div style={{ fontWeight: 800, color: '#166534', fontSize: 13 }}>Prochain rendez-vous vaccinal</div>
                 <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1080,7 +1085,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
           <div style={{ background: 'white', borderRadius: 16, border: '1px solid #eaebef', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div style={{ padding: '14px 20px', borderBottom: '1px solid #f0f1f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ebf2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>💉</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ebf2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#0056ff' }}>VAC</div>
                 <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 14, color: '#1d2129' }}>Historique des Vaccinations</span>
               </div>
               <span style={{ fontSize: 12, color: '#8a94a6', fontWeight: 600 }}>Cliquez sur une ligne pour les détails</span>
@@ -1090,7 +1095,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>Chargement…</div>
             ) : vaccinations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 20px', color: '#8a94a6' }}>
-                <div style={{ fontSize: 36, marginBottom: 10 }}>💉</div>
+                  <div style={{ fontSize: 36, marginBottom: 10, fontWeight: 800, color: '#0056ff' }}>VAC</div>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Aucune vaccination enregistrée</div>
                 <div style={{ fontSize: 12 }}>Démarrez un protocole vaccinal pour ce patient.</div>
               </div>
@@ -1106,7 +1111,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
       {/* ══ IDENTITÉ ══ */}
       {activeTab === 'identite' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="Informations Personnelles" icon="👤">
+          <SectionCard title="Informations Personnelles" icon="">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="Nom" value={patient.nom} />
               <InfoItem label="Prénom" value={patient.prenom} />
@@ -1116,13 +1121,13 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               <InfoItem label="Poids" value={patient.poids ? `${patient.poids} Kg` : null} />
             </div>
           </SectionCard>
-          <SectionCard title="Contact" icon="📞" accent="#059669">
+          <SectionCard title="Contact" icon="" accent="#059669">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
               <InfoItem label="Téléphone" value={patient.telephone} />
               <InfoItem label="Email" value={patient.email} />
             </div>
           </SectionCard>
-          <SectionCard title="Résidence & Adresse" icon="📍" accent="#7c3aed">
+          <SectionCard title="Résidence & Adresse" icon="" accent="#7c3aed">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="Wilaya" value={patient.wilaya} />
               <InfoItem label="Daïra" value={patient.daira} />
@@ -1138,23 +1143,23 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {!hasMedical && (
             <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#92400e', fontWeight: 600 }}>
-              ⚠️ Aucune information médicale renseignée pour ce patient.
+              Aucune information médicale renseignée pour ce patient.
             </div>
           )}
-          <SectionCard title="Antécédents & Allergies" icon="🩺" accent="#dc2626">
+          <SectionCard title="Antécédents & Allergies" icon="" accent="#dc2626">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <InfoItem label="Antécédents médicaux" value={patient.antecedents} full />
               <InfoItem label="Allergies connues" value={patient.allergies} full />
               <InfoItem label="Contre-indications vaccinales" value={patient.contreIndications} full />
             </div>
           </SectionCard>
-          <SectionCard title="Maladies chroniques & Traitements" icon="💊" accent="#d97706">
+          <SectionCard title="Maladies chroniques & Traitements" icon="" accent="#d97706">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <InfoItem label="Maladies chroniques" value={patient.maladiesChroniques} full />
               <InfoItem label="Traitement en cours" value={patient.traitementEnCours} full />
             </div>
           </SectionCard>
-          <SectionCard title="Mode de Vie" icon="🌿" accent="#16a34a">
+          <SectionCard title="Mode de Vie" icon="" accent="#16a34a">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="Tabagisme" value={
                 patient.fumeur === 'non'    ? 'Non-fumeur' :
@@ -1173,7 +1178,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               } />
             </div>
           </SectionCard>
-          <SectionCard title="Informations Administratives" icon="📋" accent="#0891b2">
+          <SectionCard title="Informations Administratives" icon="" accent="#0891b2">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="N° CNAS" value={patient.numeroCNAS} />
               <InfoItem label="Mutuelle" value={patient.mutuelle} />
@@ -1181,7 +1186,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
             </div>
           </SectionCard>
           {patient.notesClinicien && (
-            <SectionCard title="Notes Clinicien" icon="📝" accent="#8b5cf6">
+            <SectionCard title="Notes Clinicien" icon="" accent="#8b5cf6">
               <InfoItem label="Observations libres" value={patient.notesClinicien} full />
             </SectionCard>
           )}
@@ -1191,7 +1196,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
       {/* ══ SITUATION PRO ══ */}
       {activeTab === 'pro' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="Situation Professionnelle" icon="💼" accent="#0056ff">
+          <SectionCard title="Situation Professionnelle" icon="" accent="#0056ff">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
               <InfoItem label="Fonction" value={patient.fonction} />
               <InfoItem label="Service" value={patient.service} />
@@ -1207,6 +1212,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
 
 // ─── Page Patients (principale) ───────────────────────────────────────────────
 export default function Patients({ setPage, setSelectedPatient }) {
+  const { t } = useI18n();
   const [patients, setPatients]                         = useState([]);
   const [search, setSearch]                             = useState('');
   const [modal, setModal]                               = useState(null);
@@ -1268,9 +1274,10 @@ export default function Patients({ setPage, setSelectedPatient }) {
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Dossiers Patients</h1>
-          <p style={{ color: '#8a94a6', fontSize: 14 }}>Gérez les carnets vaccinaux et les informations démographiques détaillées.</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>{t('pat_title') || 'Dossiers Patients'}</h1>
+          <p style={{ color: '#8a94a6', fontSize: 14 }}>{t('pat_subtitle') || 'Gérez les carnets vaccinaux et les informations démographiques détaillées.'}</p>
         </div>
+
         <button onClick={() => setModal('create')}
           style={{ background: '#0056ff', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,86,255,0.2)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1279,18 +1286,18 @@ export default function Patients({ setPage, setSelectedPatient }) {
             <line x1="22" y1="12" x2="16" y2="12"/>
             <line x1="19" y1="9" x2="19" y2="15"/>
           </svg>
-          Nouveau Patient
+          {t('pat_new') || 'Nouveau Patient'}
         </button>
       </div>
 
       <div className="card" style={{ border: 'none', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Annuaire Global ({patients.length})</h3>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{t('pat_directory') || 'Annuaire Global'} ({patients.length})</h3>
           <div style={{ position: 'relative', width: '350px' }}>
             <svg style={{ position: 'absolute', left: 16, top: 10, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Rechercher par nom, téléphone ou email…"
+            <input type="text" placeholder={t('pat_search_placeholder') || "Rechercher par nom, téléphone ou email…"}
               value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: '10px 16px 10px 42px', borderRadius: '50px', border: '1px solid #eaebef', background: '#f4f5f9', outline: 'none', fontSize: 13, width: '100%', color: '#1d2129' }} />
           </div>

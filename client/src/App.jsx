@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
 //import './styles/theme.css';
+import { I18nProvider, useI18n } from './i18n';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -15,7 +16,7 @@ import Login from './pages/Login';
 
 const API = process.env.REACT_APP_API || 'http://localhost:3001';
 
-export default function App() {
+function AppContent() {
   const [page, setPage] = useState('dashboard');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,6 +27,7 @@ export default function App() {
     notificationsPush: true,
     affichageRappels: true,
   });
+  const { t } = useI18n();
 
   useEffect(() => {
     const token = localStorage.getItem('vaccitrack_token');
@@ -99,7 +101,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar page={page} setPage={setPage} />
+      <Sidebar page={page} setPage={setPage} setIsAuthenticated={setIsAuthenticated} />
 
       <main className="main-content">
         <header
@@ -116,41 +118,24 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <img src="/chu-logo.png" alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
             <div style={{ color: 'var(--color-text-primary)', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-              Service d'Epidemiologie
+              {t('header_service')}
             </div>
             <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '4px', fontWeight: 600 }}>
-              Centre Hospitalo-Universitaire de Tlemcen
+              {t('header_chu')}
             </div>
           </div>
 
-          <div style={{ position: 'absolute', top: '24px', right: '24px' }}>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                padding: '8px 16px',
-                borderRadius: '50px',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Deconnexion
-            </button>
-          </div>
         </header>
         {renderPage()}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   );
 }

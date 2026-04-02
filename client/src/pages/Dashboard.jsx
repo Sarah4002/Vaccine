@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useI18n } from '../i18n';
 import { api } from '../utils/api';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -7,14 +8,14 @@ import {
 
 // ─── Palette cohérente ────────────────────────────────────────────────────────
 const COLORS = {
-  blue:   '#0056ff',
-  pink:   '#ff6b9d',
-  green:  '#00c48c',
-  amber:  '#f59e0b',
-  red:    '#ef4444',
+  blue: '#0056ff',
+  pink: '#ff6b9d',
+  green: '#00c48c',
+  amber: '#f59e0b',
+  red: '#ef4444',
   purple: '#7c5cbf',
-  teal:   '#0ea5e9',
-  gray:   '#8a94a6',
+  teal: '#0ea5e9',
+  gray: '#8a94a6',
 };
 
 const CHART_COLORS = [
@@ -24,21 +25,23 @@ const CHART_COLORS = [
 
 // ─── Filter Panel ─────────────────────────────────────────────────────────────
 const FILTER_TYPES = [
-  { key: 'annee', label: 'Année',   type: 'select', options: [{ value: '2024', label: '2024' }, { value: '2025', label: '2025' }, { value: '2026', label: '2026' }] },
-  { key: 'mois',  label: 'Mois',    type: 'select', options: [
-    { value: '01', label: 'Janvier' }, { value: '02', label: 'Février' }, { value: '03', label: 'Mars' },
-    { value: '04', label: 'Avril' },   { value: '05', label: 'Mai' },     { value: '06', label: 'Juin' },
-    { value: '07', label: 'Juillet' }, { value: '08', label: 'Août' },    { value: '09', label: 'Septembre' },
-    { value: '10', label: 'Octobre' }, { value: '11', label: 'Novembre'}, { value: '12', label: 'Décembre' },
-  ]},
-  { key: 'sexe',   label: 'Sexe',    type: 'select', options: [{ value: 'M', label: 'Homme' }, { value: 'F', label: 'Femme' }] },
+  { key: 'annee', label: 'Année', type: 'select', options: [{ value: '2024', label: '2024' }, { value: '2025', label: '2025' }, { value: '2026', label: '2026' }] },
+  {
+    key: 'mois', label: 'Mois', type: 'select', options: [
+      { value: '01', label: 'Janvier' }, { value: '02', label: 'Février' }, { value: '03', label: 'Mars' },
+      { value: '04', label: 'Avril' }, { value: '05', label: 'Mai' }, { value: '06', label: 'Juin' },
+      { value: '07', label: 'Juillet' }, { value: '08', label: 'Août' }, { value: '09', label: 'Septembre' },
+      { value: '10', label: 'Octobre' }, { value: '11', label: 'Novembre' }, { value: '12', label: 'Décembre' },
+    ]
+  },
+  { key: 'sexe', label: 'Sexe', type: 'select', options: [{ value: 'M', label: 'Homme' }, { value: 'F', label: 'Femme' }] },
   { key: 'ageMin', label: 'Âge min', type: 'number' },
   { key: 'ageMax', label: 'Âge max', type: 'number' },
 ];
 
 const FilterPanel = ({ filters, setFilters, onApply, onReset }) => {
-  const [open, setOpen]         = useState(false);
-  const [draft, setDraft]       = useState(filters);
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(filters);
   const [activeKey, setActiveKey] = useState(null);
   const panelRef = useRef(null);
 
@@ -87,7 +90,7 @@ const FilterPanel = ({ filters, setFilters, onApply, onReset }) => {
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke={activeCount > 0 ? COLORS.blue : '#8a94a6'} strokeWidth="2">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
         Filtres
         {activeCount > 0 && (
@@ -159,7 +162,7 @@ const FilterPanel = ({ filters, setFilters, onApply, onReset }) => {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                       stroke={isActive ? COLORS.blue : '#8a94a6'} strokeWidth="2.5"
                       style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
-                      <polyline points="6 9 12 15 18 9"/>
+                      <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </div>
 
@@ -313,14 +316,14 @@ const CalendarWidget = ({ rappels }) => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [scope, setScope] = useState('month');
 
-  const year  = currentDate.getFullYear();
+  const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const monthLabel = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const startOffset = (firstDayOfWeek + 6) % 7;
   const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const rappelsByDay = {};
   rappels.forEach(r => {
@@ -374,13 +377,13 @@ const CalendarWidget = ({ rappels }) => {
             {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
             {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
               const dayRappels = rappelsByDay[day] || [];
-              const hasRappel  = dayRappels.length > 0;
-              const dateStr    = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-              const isToday    = dateStr === todayStr;
+              const hasRappel = dayRappels.length > 0;
+              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const isToday = dateStr === todayStr;
               const isSelected = selectedDay === day;
               const hasOverdue = dayRappels.some(r => r.enRetard);
-              const hasUrgent  = dayRappels.some(r => r.urgent);
-              const dotColor   = hasOverdue ? COLORS.red : hasUrgent ? COLORS.amber : COLORS.blue;
+              const hasUrgent = dayRappels.some(r => r.urgent);
+              const dotColor = hasOverdue ? COLORS.red : hasUrgent ? COLORS.amber : COLORS.blue;
               return (
                 <div key={day} onClick={() => hasRappel && setSelectedDay(selectedDay === day ? null : day)}
                   style={{ width: '100%', aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: 11, cursor: hasRappel ? 'pointer' : 'default', background: isSelected ? COLORS.blue : isToday ? '#e8f0ff' : 'transparent', color: isSelected ? 'white' : isToday ? COLORS.blue : '#1d2129', fontWeight: isToday || isSelected ? 700 : 500, border: isToday && !isSelected ? `1.5px solid ${COLORS.blue}` : '1.5px solid transparent', position: 'relative' }}>
@@ -395,7 +398,7 @@ const CalendarWidget = ({ rappels }) => {
             })}
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 10, fontSize: 10, color: '#8a94a6', flexWrap: 'wrap' }}>
-            {[[COLORS.blue,'À venir'],[COLORS.amber,'Urgent'],[COLORS.red,'En retard']].map(([c,l]) => (
+            {[[COLORS.blue, 'À venir'], [COLORS.amber, 'Urgent'], [COLORS.red, 'En retard']].map(([c, l]) => (
               <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: c, display: 'inline-block' }} />{l}
               </span>
@@ -432,7 +435,7 @@ const CalendarWidget = ({ rappels }) => {
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 0', borderBottom: i < 6 ? '1px solid #f0f1f5' : 'none' }}>
                 <div style={{ minWidth: 36, textAlign: 'center', background: isToday ? COLORS.blue : 'transparent', borderRadius: 8, padding: '3px 4px' }}>
-                  <div style={{ fontSize: 9, color: isToday ? 'rgba(255,255,255,.7)' : '#8a94a6', fontWeight: 700 }}>{['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'][i]}</div>
+                  <div style={{ fontSize: 9, color: isToday ? 'rgba(255,255,255,.7)' : '#8a94a6', fontWeight: 700 }}>{['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][i]}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: isToday ? 'white' : '#1d2129' }}>{dayNum}</div>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -451,8 +454,8 @@ const CalendarWidget = ({ rappels }) => {
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
         {[
           { label: 'Ce mois', count: Object.values(rappelsByDay).flat().length, color: COLORS.blue },
-          { label: 'Urgents',  count: rappels.filter(r => r.urgent).length,    color: COLORS.amber },
-          { label: 'En retard',count: rappels.filter(r => r.enRetard).length,  color: COLORS.red },
+          { label: 'Urgents', count: rappels.filter(r => r.urgent).length, color: COLORS.amber },
+          { label: 'En retard', count: rappels.filter(r => r.enRetard).length, color: COLORS.red },
         ].map(s => (
           <div key={s.label} style={{ flex: 1, textAlign: 'center', background: s.color + '12', borderRadius: 8, padding: '6px 4px' }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.count}</div>
@@ -466,12 +469,13 @@ const CalendarWidget = ({ rappels }) => {
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 export default function Dashboard({ setPage }) {
-  const [stats, setStats]         = useState(null);
-  const [rappels, setRappels]     = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const { t } = useI18n();
+  const [stats, setStats] = useState(null);
+  const [rappels, setRappels] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [search, setSearch]       = useState('');
-  const [filters, setFilters]     = useState({ annee: '', mois: '', jour: '', sexe: '', ageMin: '', ageMax: '' });
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({ annee: '', mois: '', jour: '', sexe: '', ageMin: '', ageMax: '' });
   const user = JSON.parse(localStorage.getItem('vaccitrack_user')) || { nom: 'Alexa Johnson', email: 'admin@vaccitrack.dz' };
 
   // Chargement initial complet
@@ -500,13 +504,13 @@ export default function Dashboard({ setPage }) {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '50vh' }}>
-      <div style={{ color: COLORS.blue, fontFamily: 'Syne', fontSize: 18, fontWeight: 700 }}>Chargement de l'interface...</div>
+      <div style={{ color: COLORS.blue, fontFamily: 'Syne', fontSize: 18, fontWeight: 700 }}>{t('dash_loading') || 'Chargement de l\'interface...'}</div>
     </div>
   );
 
   const moisLabels = (stats.vaccinationsParMois || []).map(d => {
     const [y, m] = d.mois.split('-');
-    return { ...d, mois: ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][+m - 1] };
+    return { ...d, mois: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][+m - 1] };
   });
   const chartData = moisLabels.length > 3 ? moisLabels : [
     { mois: 'Jan', count: 12 }, { mois: 'Feb', count: 25 }, { mois: 'Mar', count: 18 },
@@ -524,15 +528,15 @@ export default function Dashboard({ setPage }) {
     value: s.count
   }));
   const topVaccins = (stats.vaccinationsParVaccin || []).slice(0, 6);
-  const maxVaccin  = topVaccins[0]?.count || 1;
+  const maxVaccin = topVaccins[0]?.count || 1;
   const topWilayas = (stats.parWilaya || []).slice(0, 6);
-  const maxWilaya  = topWilayas[0]?.count || 1;
+  const maxWilaya = topWilayas[0]?.count || 1;
   const topFonctions = (stats.parFonction || []).slice(0, 5);
-  const maxFonction  = topFonctions[0]?.count || 1;
-  const ageData    = stats.parAge || [];
-  const typeData   = (stats.vaccinationsParType || []).slice(0, 5);
+  const maxFonction = topFonctions[0]?.count || 1;
+  const ageData = stats.parAge || [];
+  const typeData = (stats.vaccinationsParType || []).slice(0, 5);
   const statutData = stats.vaccinationsParStatut || [];
-  const gradeData  = stats.vaccinationsParGrade || [];
+  const gradeData = stats.vaccinationsParGrade || [];
 
   const totalSexe = sexeData.reduce((a, b) => a + b.value, 0);
 
@@ -542,7 +546,7 @@ export default function Dashboard({ setPage }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div style={{ position: 'relative', width: '350px' }}>
           <svg style={{ position: 'absolute', left: 14, top: 12, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input type="text" placeholder="Search" value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder={t('pat_search') || "Search"} value={search} onChange={e => setSearch(e.target.value)}
             style={{ width: '100%', padding: '10px 16px 10px 40px', borderRadius: '50px', border: '1px solid #eaebef', background: 'white', outline: 'none', color: '#1d2129' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -564,11 +568,11 @@ export default function Dashboard({ setPage }) {
       {/* ── GREETING + DOWNLOAD ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: 22, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Salut, {user.nom}</h1>
-          <p style={{ color: '#8a94a6', fontSize: 14 }}>Bienvenue sur VacciTrack . Gérez vos données facilement avec nous.</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 22, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>{t('dash_hello') || 'Salut'}, {user.nom}</h1>
+          <p style={{ color: '#8a94a6', fontSize: 14 }}>{t('dash_welcome') || 'Bienvenue sur VacciTrack . Gérez vos données facilement avec nous.'}</p>
         </div>
         <button style={{ background: COLORS.blue, color: 'white', border: 'none', padding: '10px 20px', borderRadius: '50px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          Download
+          {t('dash_download') || 'Download'}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
         </button>
       </div>
@@ -593,7 +597,7 @@ export default function Dashboard({ setPage }) {
               <button
                 onClick={() => setFilters(prev => ({ ...prev, [k]: '' }))}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: COLORS.blue, opacity: .6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </span>
           );
@@ -603,7 +607,7 @@ export default function Dashboard({ setPage }) {
           <span style={{ fontSize: 12, color: COLORS.blue, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={COLORS.blue} strokeWidth="2.5"
               style={{ animation: 'spin 0.8s linear infinite' }}>
-              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
             Mise à jour…
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -614,20 +618,20 @@ export default function Dashboard({ setPage }) {
       {/* ── KPI CARDS ── */}
       <div className="stats-grid" style={{ gap: 16 }}>
         {[
-          { icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>, label: 'Total Patients',     val: stats.totalPatients,          page: 'patients' },
-          { icon: <><path d="M12 2l-2 2 4 4 2-2-4-4z" /><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z" /><line x1="14" y1="10" x2="4" y2="20" /></>, label: 'Total Vaccinations', val: stats.totalVaccinations,      page: 'vaccinations' },
-          { icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>, label: 'Upcoming Appt.',     val: stats.rappelsProchains,       page: 'rappels' },
-          { icon: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>, label: 'Overdue Alerts',    val: stats.vaccinationsEnRetard,  page: 'rappels', danger: true },
+          { icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>, label: t('dash_kpi_patients') || 'Total Patients', val: stats.totalPatients, page: 'patients' },
+          { icon: <><path d="M12 2l-2 2 4 4 2-2-4-4z" /><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z" /><line x1="14" y1="10" x2="4" y2="20" /></>, label: t('dash_kpi_vaccinations') || 'Total Vaccinations', val: stats.totalVaccinations, page: 'vaccinations' },
+          { icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>, label: t('dash_kpi_upcoming') || 'Upcoming Appt.', val: stats.rappelsProchains, page: 'rappels' },
+          { icon: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>, label: t('dash_kpi_overdue') || 'Overdue Alerts', val: stats.vaccinationsEnRetard, page: 'rappels', danger: true },
         ].map((c, i) => (
           <div key={i} className="stat-card" style={{ padding: '16px', position: 'relative', overflow: 'hidden', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer' }} onClick={() => setPage(c.page)}>
             <div className="stat-header">
-              <div className="stat-icon" style={{ background: c.danger ? COLORS.red : COLORS.blue, width: 32, height: 32, borderRadius: '50%' }}>
+              <div className="stat-icon" style={{ background: c.danger ? COLORS.red : COLORS.blue, width: 32, height: 32, borderRadius: '50%', color: 'white' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{c.icon}</svg>
               </div>
               <div className="stat-label">{c.label}</div>
             </div>
             <div className="stat-value" style={{ color: c.danger && stats.vaccinationsEnRetard > 0 ? COLORS.red : undefined }}>{c.val}</div>
-            <div className="stat-footer">Last Update: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+            <div className="stat-footer">{t('dash_kpi_last') || 'Last Update'}: {new Date().toLocaleDateString('fr-FR')}</div>
           </div>
         ))}
       </div>
@@ -635,11 +639,11 @@ export default function Dashboard({ setPage }) {
       {/* ════════════════════════════════════════════════════════════
           ── STATS SECTION — sous les KPI ──────────────────────────
           ════════════════════════════════════════════════════════════ */}
-        {/* ── CHART + CALENDAR ── */}
+      {/* ── CHART + CALENDAR ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginTop: 20, marginBottom: 28 }}>
         <div className="card" style={{ padding: '16px', border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Vaccination Statistics</h3>
+            <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{t('dash_stat_title') || 'Vaccination Statistics'}</h3>
             <div style={{ display: 'flex', gap: 12 }}>
               <select style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid #eaebef', fontSize: 13, background: 'white', color: '#1d2129' }}>
                 <option>Jan - Jun 2026</option>
@@ -654,7 +658,7 @@ export default function Dashboard({ setPage }) {
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorBlue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={COLORS.blue} stopOpacity={0.15} />
+                    <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.15} />
                     <stop offset="95%" stopColor={COLORS.blue} stopOpacity={0} />
                   </linearGradient>
                 </defs>
@@ -674,7 +678,7 @@ export default function Dashboard({ setPage }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr 1.4fr', gap: 16, marginTop: 20 }}>
 
         {/* Répartition par sexe */}
-        <SectionCard title="Répartition par sexe">
+        <SectionCard title={t('dash_sex_dist') || "Répartition par sexe"}>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <PieChart width={160} height={160}>
               <Pie data={sexeData} dataKey="value" cx="50%" cy="50%" innerRadius={42} outerRadius={68} paddingAngle={3}>
@@ -697,7 +701,7 @@ export default function Dashboard({ setPage }) {
         </SectionCard>
 
         {/* Tranches d'âge */}
-        <SectionCard title="Patients par tranche d'âge">
+        <SectionCard title={t('dash_age_dist') || "Patients par tranche d'âge"}>
           <ResponsiveContainer width="100%" height={190}>
             <BarChart data={ageData} margin={{ left: -20, right: 4, bottom: 0 }}>
               <XAxis dataKey="tranche" axisLine={false} tickLine={false} tick={{ fill: '#8a94a6', fontSize: 10 }} />
@@ -712,7 +716,7 @@ export default function Dashboard({ setPage }) {
         </SectionCard>
 
         {/* Types de vaccination */}
-        <SectionCard title="Types de vaccination">
+        <SectionCard title={t('dash_type_dist') || "Types de vaccination"}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {typeData.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
@@ -738,7 +742,7 @@ export default function Dashboard({ setPage }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1.4fr 1fr', gap: 16, marginTop: 16 }}>
 
         {/* Top vaccins administrés */}
-        <SectionCard title="Top vaccins administrés">
+        <SectionCard title={t('dash_top_vac') || "Top vaccins administrés"}>
           {topVaccins.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
           ) : (
@@ -751,7 +755,7 @@ export default function Dashboard({ setPage }) {
         </SectionCard>
 
         {/* Top wilayas */}
-        <SectionCard title="Patients par wilaya">
+        <SectionCard title={t('dash_top_wilaya') || "Patients par wilaya"}>
           {topWilayas.length === 0 ? (
             <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
           ) : (
@@ -767,7 +771,7 @@ export default function Dashboard({ setPage }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Statuts vaccinations */}
-          <SectionCard title="Statuts">
+          <SectionCard title={t('dash_status') || "Statuts"}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {statutData.map((s, i) => {
                 const color = s.statut === 'complete' ? COLORS.green : s.statut === 'en_cours' ? COLORS.blue : COLORS.amber;
@@ -787,7 +791,7 @@ export default function Dashboard({ setPage }) {
             </div>
           </SectionCard>
 
-         
+
         </div>
       </div>
 
@@ -823,7 +827,7 @@ export default function Dashboard({ setPage }) {
         </div>
       )}
 
-    
+
 
       {/* ── TABLE UPCOMING ── */}
       <div className="card" style={{ border: 'none', padding: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
