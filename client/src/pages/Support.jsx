@@ -1,309 +1,201 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/Support.css';
+import { useI18n } from '../i18n';
+import { api } from '../utils/api';
 
-const API = process.env.REACT_APP_API || 'http://localhost:3001';
-
-const CATEGORIES = ['Bug', 'Feature Request', 'Question', 'Autre'];
+const CATEGORIES = ['Bug', 'Amélioration', 'Question', 'Autre'];
 const PRIORITIES = ['basse', 'normal', 'haute'];
-const STATUTS = ['ouvert', 'en-cours', 'resolu', 'ferme'];
 
 export default function Support() {
+  const { t } = useI18n();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [filterStatut, setFilterStatut] = useState('');
-
-  const [formData, setFormData] = useState({
-    titre: '',
-    description: '',
-    categorie: 'Question',
-    priorite: 'normal'
-  });
+  const [formData, setFormData] = useState({ titre: '', description: '', categorie: 'Question', priorite: 'normal' });
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMsg, setChatMsg] = useState('');
+  const [messages, setMessages] = useState([{ type: 'bot', text: t('sup_chat_welcome') }]);
 
   useEffect(() => {
-    fetchTickets();
+    loadTickets();
   }, []);
 
-  const fetchTickets = async (statusFilter = '') => {
+  const loadTickets = async () => {
     try {
-      let url = `${API}/api/support-tickets`;
-      if (statusFilter) url += `?statut=${statusFilter}`;
-
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setTickets(data);
-      }
-      setLoading(false);
+      const data = await api.getTickets();
+      setTickets(data);
     } catch (err) {
-      console.error('Erreur:', err);
+      console.error(err);
+    } finally {
       setLoading(false);
     }
-  };
-
-  const handleFilterChange = (status) => {
-    setFilterStatut(status);
-    fetchTickets(status);
-  };
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.titre.trim() || !formData.description.trim()) {
-      alert('Veuillez remplir tous les champs');
-      return;
-    }
+    if (!formData.titre.trim() || !formData.description.trim()) return;
 
     try {
-      const res = await fetch(`${API}/api/support-tickets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      if (res.ok) {
-        const newTicket = await res.json();
-        setTickets([newTicket, ...tickets]);
-        setFormData({ titre: '', description: '', categorie: 'Question', priorite: 'normal' });
-        setShowForm(false);
-        alert('✓ Ticket de support créé avec succès!');
-      }
+      const newT = await api.createTicket(formData);
+      setTickets([newT, ...tickets]);
+      setFormData({ titre: '', description: '', categorie: 'Question', priorite: 'normal' });
+      setShowForm(false);
+      alert(`OK - ${t('sup_ticket_created')}`);
     } catch (err) {
-      console.error('Erreur:', err);
-      alert('Erreur lors de la création du ticket');
+      alert(t('sup_connection_error'));
     }
   };
 
-  const handleStatusChange = async (ticketId, newStatus) => {
-    try {
-      const res = await fetch(`${API}/api/support-tickets/${ticketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statut: newStatus })
-      });
-
-      if (res.ok) {
-        const updatedTicket = await res.json();
-        setTickets(tickets.map(t => t.id === ticketId ? updatedTicket : t));
-        if (selectedTicket?.id === ticketId) {
-          setSelectedTicket(updatedTicket);
-        }
-      }
-    } catch (err) {
-      console.error('Erreur:', err);
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'haute': return '#e74c3c';
-      case 'normal': return '#f39c12';
-      case 'basse': return '#27ae60';
-      default: return '#95a5a6';
-    }
-  };
-
-  const getStatutBadge = (statut) => {
-    const badges = {
-      'ouvert': <span className="status-badge status-open"></span>,
-      'en-cours': <span className="status-badge status-progress"></span>,
-      'resolu': <span className="status-badge status-resolved"></span>,
-      'ferme': <span className="status-badge status-closed"></span>
-    };
-    return badges[statut] || <span className="status-badge status-unknown"></span>;
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatMsg.trim()) return;
+    const newMsgs = [...messages, { type: 'user', text: chatMsg }];
+    setMessages(newMsgs);
+    setChatMsg('');
+    setTimeout(() => {
+      setMessages([...newMsgs, { type: 'bot', text: t('sup_chat_reply') }]);
+    }, 1000);
   };
 
   return (
-    <div className="support-container">
-      <div className="support-header">
-        <h1><span className="icon-phone"></span> Support Client</h1>
-        <p>Soumettre un ticket de support ou consulter les tickets existants</p>
-      </div>
-
-      <div className="support-controls">
-        <button
-          className={`btn btn-primary ${showForm ? 'active' : ''}`}
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? '✕ Fermer' : '➕ Nouveau Ticket'}
+    <div className="animate-fade-in" style={{ paddingBottom: '80px' }}>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('sup_title')}</h1>
+          <p className="page-subtitle">
+            <span className="sup-status-dot"></span> {t('sup_subtitle')}
+          </p>
+        </div>
+        <button className="btn btn-primary pulse-primary" onClick={() => setShowForm(!showForm)}>
+          {showForm ? t('sup_close') : t('sup_open_ticket')}
         </button>
-
-        <div className="status-filters">
-          <button
-            className={`filter-btn ${filterStatut === '' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('')}
-          >
-            Tous
-          </button>
-          {STATUTS.map(status => (
-            <button
-              key={status}
-              className={`filter-btn ${filterStatut === status ? 'active' : ''}`}
-              onClick={() => handleFilterChange(status)}
-            >
-              {getStatutBadge(status)} {status}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Formulaire de création */}
-      {showForm && (
-        <div className="support-form">
-          <h2>Créer un nouveau ticket</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Titre *</label>
-              <input
-                type="text"
-                name="titre"
-                value={formData.titre}
-                onChange={handleFormChange}
-                placeholder="Résumé du problème..."
-                className="input-text"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleFormChange}
-                placeholder="Décrivez le problème en détail..."
-                className="input-textarea"
-                rows="5"
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Catégorie</label>
-                <select
-                  name="categorie"
-                  value={formData.categorie}
-                  onChange={handleFormChange}
-                  className="input-select"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Priorité</label>
-                <select
-                  name="priorite"
-                  value={formData.priorite}
-                  onChange={handleFormChange}
-                  className="input-select"
-                >
-                  {PRIORITIES.map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" className="btn btn-success">
-              ✓ Soumettre le ticket
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Liste des tickets */}
-      {loading ? (
-        <div className="loading">Chargement des tickets...</div>
-      ) : tickets.length === 0 ? (
-        <div className="no-tickets">
-          <p>✓ Aucun ticket. Tout va bien!</p>
-        </div>
-      ) : (
-        <div className="tickets-content">
-          <div className="tickets-list">
-            {tickets.map(ticket => (
-              <div
-                key={ticket.id}
-                className={`ticket-card ${selectedTicket?.id === ticket.id ? 'selected' : ''}`}
-                onClick={() => setSelectedTicket(ticket)}
-              >
-                <div className="ticket-header">
-                  <span className="ticket-badge">{getStatutBadge(ticket.statut)}</span>
-                  <h3>{ticket.titre.substring(0, 50)}...</h3>
-                  <span
-                    className="priority-badge"
-                    style={{ backgroundColor: getPriorityColor(ticket.priorite) }}
-                  >
-                    {ticket.priorite}
-                  </span>
+      <div className="sup-grid">
+        <div className="sup-main">
+          {showForm && (
+            <div className="sup-card animate-slide-up" style={{ marginBottom: '24px', border: '1px solid var(--accent)' }}>
+              <h3 style={{ marginBottom: '16px' }}>{t('sup_new_request')}</h3>
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">{t('sup_subject')}</label>
+                  <input className="form-control" value={formData.titre} onChange={e => setFormData({ ...formData, titre: e.target.value })} required />
                 </div>
-                <div className="ticket-meta">
-                  <span>{ticket.categorie}</span>
-                  <span>{new Date(ticket.createdAt).toLocaleDateString('fr-FR')}</span>
+                <div className="form-group">
+                  <label className="form-label">{t('sup_details')}</label>
+                  <textarea className="form-control" rows="4" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} required></textarea>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Détails du ticket */}
-          {selectedTicket && (
-            <div className="ticket-details">
-              <button className="close-btn" onClick={() => setSelectedTicket(null)}>✕</button>
-              <h2>{selectedTicket.titre}</h2>
-              <div className="ticket-status">
-                <span className="badge">{getStatutBadge(selectedTicket.statut)}</span>
-                <span className="badge">{selectedTicket.categorie}</span>
-                <span
-                  className="badge priority"
-                  style={{ backgroundColor: getPriorityColor(selectedTicket.priorite) }}
-                >
-                  {selectedTicket.priorite}
-                </span>
-              </div>
-
-              <div className="ticket-dates">
-                <p>
-                  <strong>Créé:</strong> {new Date(selectedTicket.createdAt).toLocaleDateString('fr-FR')}
-                </p>
-                <p>
-                  <strong>Mis à jour:</strong>{' '}
-                  {new Date(selectedTicket.updatedAt).toLocaleDateString('fr-FR')}
-                </p>
-              </div>
-
-              <div className="ticket-description">
-                <h3>Description</h3>
-                <p>{selectedTicket.description}</p>
-              </div>
-
-              <div className="ticket-actions">
-                <label>Changer le statut:</label>
-                <select
-                  value={selectedTicket.statut}
-                  onChange={(e) => handleStatusChange(selectedTicket.id, e.target.value)}
-                  className="input-select"
-                >
-                  {STATUTS.map(status => (
-                    <option key={status} value={status}>
-                      {getStatutBadge(status)} {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">{t('sup_type')}</label>
+                    <select className="form-control" value={formData.categorie} onChange={e => setFormData({ ...formData, categorie: e.target.value })}>
+                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{t('sup_priority')}</label>
+                    <select className="form-control" value={formData.priorite} onChange={e => setFormData({ ...formData, priorite: e.target.value })}>
+                      {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px' }}>
+                  {t('sup_submit')}
+                </button>
+              </form>
             </div>
           )}
+
+          <div className="sup-card">
+            <h3 style={{ marginBottom: '20px' }}>{t('sup_tracking')}</h3>
+            {loading ? (
+              <p>Mise à jour...</p>
+            ) : tickets.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <p style={{ color: 'var(--text-muted)' }}>{t('sup_no_tickets')}</p>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {tickets.map(ticket => (
+                  <div key={ticket.id || `${ticket.titre}-${ticket.createdAt}`} className="sig-commune-item" style={{ cursor: 'default', background: 'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span
+                        className="badge"
+                        style={{
+                          background: ticket.statut === 'ouvert' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                          color: ticket.statut === 'ouvert' ? '#ef4444' : '#22c55e'
+                        }}
+                      >
+                        {String(ticket.statut || 'ouvert').toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : '--'}
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: 700 }}>{ticket.titre || 'Sans titre'}</div>
+                    <div style={{ fontSize: '12px', opacity: 0.7 }}>ID: {String(ticket.id || 'inconnu').substring(0, 8)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+
+        <div className="sup-sidebar">
+          <div className="sup-contact-box">
+            <h4 style={{ marginBottom: '12px' }}>{t('sup_contacts')}</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a href="mailto:derkaouitema9@gmail.com" className="sup-contact-link">derkaouitema9@gmail.com</a>
+              <a href="mailto:sarahbelmahi378@gmail.com" className="sup-contact-link">sarahbelmahi378@gmail.com</a>
+              <a href="tel:0554199024" className="sup-contact-link">0554 19 90 24</a>
+              <a href="tel:0561148201" className="sup-contact-link">0561 14 82 01</a>
+            </div>
+          </div>
+          <div className="sup-card sup-glass">
+            <h4 style={{ marginBottom: '12px' }}>VacciTrack Aide</h4>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+              Notre équipe est à votre écoute pour optimiser la vaccination à Tlemcen.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* CHAT WINDOW */}
+      <div className={`chat-window ${chatOpen ? 'active' : ''}`}>
+        <div className="chat-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="sup-status-dot" style={{ margin: 0 }}></div>
+            <span style={{ fontWeight: 700 }}>{t('sup_chat_title')}</span>
+          </div>
+          <button onClick={() => setChatOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 700 }}>
+            Fermer
+          </button>
+        </div>
+        <div className="chat-body">
+          {messages.map((m, i) => (
+            <div key={i} className={`chat-msg ${m.type}`}>
+              {m.text}
+            </div>
+          ))}
+        </div>
+        <form className="chat-footer" onSubmit={handleSendChat}>
+          <input
+            className="form-control"
+            style={{ borderRadius: '20px', padding: '8px 15px', height: '40px' }}
+            placeholder={t('sup_chat_placeholder')}
+            value={chatMsg}
+            onChange={e => setChatMsg(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary" style={{ borderRadius: '20px', padding: '0 16px', height: '40px' }}>
+            Envoyer
+          </button>
+        </form>
+      </div>
+
+      <button className="floating-chat pulse-primary" onClick={() => setChatOpen(!chatOpen)} title="Chat en direct">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </button>
     </div>
   );
 }

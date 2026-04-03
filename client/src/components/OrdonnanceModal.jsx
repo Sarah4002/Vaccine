@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import { api, API_BASE } from '../utils/api';
 
 const inputStyle = {
-  width: '100%', padding: '11px 14px', borderRadius: '6px',
-  border: '1px solid #d1d5db', outline: 'none', fontSize: '13px',
-  background: '#f9fafb', color: '#1d2129', fontFamily: 'inherit'
+  width: '100%', padding: '10px 14px', borderRadius: '8px',
+  border: '1px solid #eaebef', outline: 'none', fontSize: '13px',
+  background: '#f8f9fb', color: '#1d2129', fontFamily: 'inherit',
+  transition: 'border .15s',
 };
 const labelStyle = {
-  fontSize: '11px', fontWeight: 700, color: '#6b7280', display: 'block',
-  marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.5px'
+  fontSize: '11px', fontWeight: 700, color: '#8a94a6', display: 'block',
+  marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.4px'
 };
 const sectionTitleStyle = {
-  fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase',
-  letterSpacing: '0.8px', marginBottom: '12px', paddingBottom: '6px',
-  borderBottom: '1px solid #e5e7eb'
+  fontSize: '11px', fontWeight: 800, color: '#0056ff', textTransform: 'uppercase',
+  letterSpacing: '0.6px', marginBottom: '12px'
 };
 
 export default function OrdonnanceModal({ patient, onClose }) {
@@ -88,7 +88,25 @@ export default function OrdonnanceModal({ patient, onClose }) {
     }
   };
 
-  const printOrdonnance = (ord) => {
+  const printOrdonnance = async (ord) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/generate-ordonnance-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient, ordonnance: ord }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ordonnance_${patient.nom || 'patient'}_${patient.prenom || ''}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    } catch (err) {
+      console.warn('Generation PDF serveur indisponible, bascule vers impression locale:', err.message);
+    }
     const age = patient.dateNaissance
       ? Math.floor((Date.now() - new Date(patient.dateNaissance)) / (1000 * 60 * 60 * 24 * 365.25)) + ' ans'
       : '—';
@@ -249,38 +267,39 @@ export default function OrdonnanceModal({ patient, onClose }) {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(17,24,39,0.5)', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', zIndex: 1100
+      position: 'fixed', inset: 0,
+      background: 'rgba(17,24,41,0.45)', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', zIndex: 1100, backdropFilter: 'blur(2px)', padding: 16
     }} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: 'white', borderRadius: '10px', padding: '28px',
-        width: '100%', maxWidth: '720px',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-        maxHeight: '90vh', overflowY: 'auto',
-        border: '1px solid #e5e7eb'
+        background: 'white', borderRadius: 20,
+        width: '100%', maxWidth: '800px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+        maxHeight: '94vh', overflow: 'hidden',
+        border: '1px solid #eaebef', display: 'flex', flexDirection: 'column'
       }}>
 
         {/* EN-TETE MODAL */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
           <div>
-            <h2 style={{ fontFamily: 'Syne', fontSize: '17px', fontWeight: 800, color: '#1d2129', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: '#1d2129', marginBottom: 2 }}>
               Ordonnances
             </h2>
-            <p style={{ fontSize: '12px', color: '#6b7280' }}>
-              {patient.prenom} {patient.nom} &mdash; {ordonnances.length} ordonnance(s) enregistree(s)
+            <p style={{ fontSize: 12, color: '#8a94a6' }}>
+              {patient.prenom} {patient.nom} - {ordonnances.length} ordonnance(s) enregistree(s)
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button
               onClick={() => setShowForm(f => !f)}
               style={{
-                background: showForm ? '#f3f4f6' : '#1d2129',
+                background: showForm ? '#f4f5f9' : '#0056ff',
                 color: showForm ? '#374151' : 'white',
-                border: '1px solid ' + (showForm ? '#d1d5db' : '#1d2129'),
-                padding: '8px 16px', borderRadius: '6px', fontWeight: 700,
+                border: '1px solid ' + (showForm ? '#d1d5db' : '#0056ff'),
+                padding: '8px 16px', borderRadius: '50px', fontWeight: 700,
                 cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px',
-                fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.5px'
+                fontFamily: 'inherit'
               }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 {showForm
@@ -290,7 +309,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
               {showForm ? 'Annuler' : 'Nouvelle Ordonnance'}
             </button>
             <button onClick={onClose} style={{
-              background: 'none', border: '1px solid #d1d5db', borderRadius: '6px',
+              background: 'none', border: 'none', borderRadius: '6px',
               width: '34px', height: '34px', cursor: 'pointer', color: '#6b7280',
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
@@ -300,12 +319,16 @@ export default function OrdonnanceModal({ patient, onClose }) {
             </button>
           </div>
         </div>
+        <div style={{ height: 1, background: '#f0f1f5', marginLeft: -28, marginRight: -28 }} />
+        </div>
 
         {/* FORMULAIRE */}
+        <div style={{ overflowY: 'auto', padding: '24px 28px', flex: 1 }}>
         {showForm && (
           <form onSubmit={handleSubmit} style={{
-            background: '#f9fafb', border: '1px solid #e5e7eb',
-            borderRadius: '8px', padding: '20px', marginBottom: '20px'
+            background: '#fbfcff', border: '1px solid #eaebef',
+            borderRadius: '16px', padding: '22px', marginBottom: '20px',
+            boxShadow: '0 10px 24px rgba(15,23,42,0.04)'
           }}>
             <div style={{ ...sectionTitleStyle, marginBottom: '16px' }}>
               Saisie de l'ordonnance
@@ -333,7 +356,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
                 <label style={{ ...labelStyle, marginBottom: 0 }}>Medicaments Prescrits</label>
                 <button type="button" onClick={addMedicament} style={{
                   background: 'white', color: '#374151', border: '1px solid #d1d5db',
-                  borderRadius: '5px', padding: '4px 12px', fontSize: '11px', fontWeight: 700,
+                  borderRadius: '999px', padding: '6px 14px', fontSize: '11px', fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.4px'
                 }}>
                   + Ajouter un medicament
@@ -341,7 +364,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {form.medicaments.map((m, idx) => (
-                  <div key={idx} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '14px' }}>
+                  <div key={idx} style={{ background: 'white', border: '1px solid #eaebef', borderRadius: '14px', padding: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
                         Medicament {idx + 1}
@@ -349,7 +372,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
                       {form.medicaments.length > 1 && (
                         <button type="button" onClick={() => removeMedicament(idx)} style={{
                           background: 'none', color: '#ef4444', border: '1px solid #fca5a5',
-                          borderRadius: '4px', padding: '2px 10px', fontSize: '11px', cursor: 'pointer',
+                          borderRadius: '999px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer',
                           fontFamily: 'inherit'
                         }}>
                           Supprimer
@@ -386,15 +409,15 @@ export default function OrdonnanceModal({ patient, onClose }) {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
               <button type="button" onClick={() => setShowForm(false)} style={{
-                padding: '9px 20px', borderRadius: '6px', border: '1px solid #d1d5db',
+                padding: '10px 20px', borderRadius: '999px', border: '1px solid #d1d5db',
                 background: 'white', fontWeight: 600, cursor: 'pointer', color: '#6b7280',
                 fontSize: '12px', fontFamily: 'inherit'
               }}>
                 Annuler
               </button>
               <button type="submit" disabled={saving} style={{
-                padding: '9px 20px', borderRadius: '6px', border: 'none',
-                background: '#1d2129', fontWeight: 700, cursor: 'pointer', color: 'white',
+                padding: '10px 20px', borderRadius: '999px', border: 'none',
+                background: '#0056ff', fontWeight: 700, cursor: 'pointer', color: 'white',
                 fontSize: '12px', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.5px'
               }}>
                 {saving ? 'Enregistrement...' : 'Enregistrer l\'ordonnance'}
@@ -420,7 +443,10 @@ export default function OrdonnanceModal({ patient, onClose }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {ordonnances.map(ord => (
-              <div key={ord.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '14px 16px', background: 'white' }}>
+              <div key={ord.id} style={{
+                border: '1px solid #eaebef', borderRadius: '16px', padding: '16px 18px', background: 'white',
+                boxShadow: '0 10px 24px rgba(15,23,42,0.04)'
+              }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '13px', color: '#1d2129' }}>
@@ -440,7 +466,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => printOrdonnance(ord)} style={{
                       background: 'white', color: '#374151', border: '1px solid #d1d5db',
-                      borderRadius: '5px', padding: '5px 12px', cursor: 'pointer',
+                      borderRadius: '999px', padding: '6px 12px', cursor: 'pointer',
                       fontWeight: 700, fontSize: '11px', display: 'flex', alignItems: 'center',
                       gap: '5px', fontFamily: 'inherit', textTransform: 'uppercase', letterSpacing: '0.4px'
                     }}>
@@ -453,7 +479,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
                     </button>
                     <button onClick={() => handleDelete(ord.id)} style={{
                       background: 'none', color: '#9ca3af', border: '1px solid #e5e7eb',
-                      borderRadius: '5px', padding: '5px 8px', cursor: 'pointer'
+                      borderRadius: '999px', padding: '6px 10px', cursor: 'pointer'
                     }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="3 6 5 6 21 6"/>
@@ -480,6 +506,7 @@ export default function OrdonnanceModal({ patient, onClose }) {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

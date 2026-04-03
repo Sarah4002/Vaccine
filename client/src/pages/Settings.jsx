@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n';
 import '../styles/Settings.css';
 
 const API = process.env.REACT_APP_API || 'http://localhost:3001';
 
 export default function Settings() {
+  const { t, setLangue } = useI18n();
   const [settings, setSettings] = useState({
     langue: 'fr',
     theme: 'light',
@@ -23,7 +25,13 @@ export default function Settings() {
       const res = await fetch(`${API}/api/settings`);
       if (res.ok) {
         const data = await res.json();
-        setSettings(data);
+        setSettings({
+          langue: data.langue || 'fr',
+          theme: data.theme || 'light',
+          notificationsEmail: Boolean(data.notificationsEmail),
+          notificationsPush: Boolean(data.notificationsPush),
+          affichageRappels: Boolean(data.affichageRappels),
+        });
       }
       setLoading(false);
     } catch (err) {
@@ -44,6 +52,9 @@ export default function Settings() {
     // Appliquer immédiatement le thème et la langue
     if (name === 'theme' || name === 'langue') {
       applySettings(newSettings);
+      if (name === 'langue') {
+        setLangue(value);
+      }
     }
   };
 
@@ -78,73 +89,19 @@ export default function Settings() {
     return <div className="settings-container loading">Chargement...</div>;
   }
 
-  const translations = {
-    fr: {
-      title: 'Paramètres',
-      description: 'Gérez vos préférences et paramètres d\'application',
-      language: 'Langue',
-      theme: 'Thème',
-      light: 'Clair',
-      dark: 'Sombre',
-      auto: 'Auto',
-      notifications: 'Notifications',
-      email: 'Notifications par email',
-      push: 'Notifications push',
-      reminders: 'Rappels de vaccination',
-      show_reminders: 'Afficher les rappels de vaccination',
-      save: 'Enregistrer les paramètres',
-      saved: 'Paramètres sauvegardés avec succès'
-    },
-    en: {
-      title: 'Settings',
-      description: 'Manage your preferences and application settings',
-      language: 'Language',
-      theme: 'Theme',
-      light: 'Light',
-      dark: 'Dark',
-      auto: 'Auto',
-      notifications: 'Notifications',
-      email: 'Email notifications',
-      push: 'Push notifications',
-      reminders: 'Vaccination Reminders',
-      show_reminders: 'Show vaccination reminders',
-      save: 'Save Settings',
-      saved: 'Settings saved successfully'
-    },
-    ar: {
-      title: 'الإعدادات',
-      description: 'إدارة تفضيلاتك وإعدادات التطبيق',
-      language: 'اللغة',
-      theme: 'الموضوع',
-      light: 'فاتح',
-      dark: 'داكن',
-      auto: 'تلقائي',
-      notifications: 'الإشعارات',
-      email: 'إخطارات البريد الإلكتروني',
-      push: 'إشعارات الدفع',
-      reminders: 'تذكيرات التطعيم',
-      show_reminders: 'عرض تذكيرات التطعيم',
-      save: 'حفظ الإعدادات',
-      saved: 'تم حفظ الإعدادات بنجاح'
-    }
-  };
-
-  const t = translations[settings.langue] || translations.fr;
-
   return (
     <div className="settings-container">
       <div className="settings-header">
-        <h1>⚙️ {t.title}</h1>
-        <p>{t.description}</p>
+        <h1>{t('set_title')}</h1>
+        <p>{t('set_description')}</p>
       </div>
 
-      {saved && <div className="settings-message success">✓ {t.saved}</div>}
+      {saved && <div className="settings-message success">{t('set_saved')}</div>}
 
       <div className="settings-grid">
         {/* Section Langue */}
         <div className="settings-section">
-          <div className="section-icon">🌐</div>
-          <h2>{t.language}</h2>
+          <h2>{t('set_language')}</h2>
           <select name="langue" value={settings.langue} onChange={handleChange} className="input-select">
             <option value="fr">Français</option>
             <option value="en">English</option>
@@ -154,19 +111,17 @@ export default function Settings() {
 
         {/* Section Thème */}
         <div className="settings-section">
-          <div className="section-icon">🎨</div>
-          <h2>{t.theme}</h2>
+          <h2>{t('set_theme')}</h2>
           <select name="theme" value={settings.theme} onChange={handleChange} className="input-select">
-            <option value="light">{t.light}</option>
-            <option value="dark">{t.dark}</option>
-            <option value="auto">{t.auto}</option>
+            <option value="light">{t('set_light')}</option>
+            <option value="dark">{t('set_dark')}</option>
+            <option value="auto">{t('set_auto')}</option>
           </select>
         </div>
 
         {/* Section Notifications */}
         <div className="settings-section">
-          <div className="section-icon">🔔</div>
-          <h2>{t.notifications}</h2>
+          <h2>{t('set_notifications')}</h2>
           <div className="checkbox-group">
             <label>
               <input
@@ -175,7 +130,7 @@ export default function Settings() {
                 checked={settings.notificationsEmail}
                 onChange={handleChange}
               />
-              <span>{t.email}</span>
+              <span>{t('set_email')}</span>
             </label>
             <label>
               <input
@@ -184,15 +139,14 @@ export default function Settings() {
                 checked={settings.notificationsPush}
                 onChange={handleChange}
               />
-              <span>{t.push}</span>
+              <span>{t('set_push')}</span>
             </label>
           </div>
         </div>
 
         {/* Section Rappels */}
         <div className="settings-section">
-          <div className="section-icon icon-calendar"></div>
-          <h2>{t.reminders}</h2>
+          <h2>{t('set_reminders')}</h2>
           <label>
             <input
               type="checkbox"
@@ -200,13 +154,13 @@ export default function Settings() {
               checked={settings.affichageRappels}
               onChange={handleChange}
             />
-            <span>{t.show_reminders}</span>
+            <span>{t('set_show_reminders')}</span>
           </label>
         </div>
       </div>
 
       <button className="btn btn-primary btn-save" onClick={handleSave}>
-        <span className="icon-save"></span> {t.save}
+        <span className="icon-save"></span> {t('set_save')}
       </button>
     </div>
   );

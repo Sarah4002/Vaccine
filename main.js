@@ -1,21 +1,48 @@
 const { app, BrowserWindow } = require('electron');
-const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
-function waitForReact(url, callback) {
-  http.get(url, () => callback()).on('error', () => {
-    setTimeout(() => waitForReact(url, callback), 1000);
-  });
-}
+let mainWindow;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
   });
 
-  waitForReact('http://localhost:3000', () => {
-    win.loadURL('http://localhost:3000');
+  const isDev = !app.isPackaged;
+  const packagedEntry = [
+    path.join(__dirname, 'client', 'build-electron', 'index.html'),
+    path.join(__dirname, 'client', 'build', 'index.html'),
+  ].find((entry) => fs.existsSync(entry));
+
+  if (isDev) {
+    // 🟢 DEV MODE
+    mainWindow.loadURL('http://localhost:3000');
+  } else if (packagedEntry) {
+    // 🔵 PRODUCTION (.exe)
+    mainWindow.loadFile(packagedEntry);
+  } else {
+    console.error('No packaged frontend entry found.');
+  }
+
+  // افتح devtools للتشخيص (اختياري)
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error('Electron failed to load content:', errorCode, errorDescription);
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
 }
 
 app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
