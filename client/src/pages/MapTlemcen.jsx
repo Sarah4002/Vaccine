@@ -53,47 +53,43 @@ const COMMUNE_COORDS = {
 
 const COLORS = ['#0056ff', '#4385f5', '#22c55e', '#ffb822', '#ef4444', '#8b5cf6'];
 
-// ─── Fonction principale : cercle avec halos concentriques ───────────────────
+// ─── Fonction principale : cercle avec effet radar ──────────────────────────
 const createExtremeIcon = (count, isSelected, isHovered) => {
-  // Taille du cercle central selon densité
-  const baseRadius = count > 500 ? 36
-    : count > 200 ? 30
-    : count > 100 ? 24
-    : count > 50  ? 19
-    : count > 20  ? 14
-    : count > 10  ? 11
-    : 8;
+  const baseRadius = count > 500 ? 70
+    : count > 300 ? 60
+    : count > 200 ? 52
+    : count > 100 ? 42
+    : count > 50  ? 32
+    : count > 20  ? 24
+    : count > 10  ? 18
+    : 12;
 
-  // Couleur selon densité
   const color = count > 200 ? '#ef4444'
     : count > 50  ? '#ffb822'
     : count > 10  ? '#0056ff'
     : '#22c55e';
 
-  // Nombre d'anneaux selon densité
-  const rings = count > 200 ? 3 : count > 50 ? 2 : count > 10 ? 1 : 0;
-
-  // Taille totale du conteneur (cercle + anneaux)
-  const totalSize = baseRadius * 2 + rings * 28 + (isSelected ? 16 : 0);
+  const rings = count > 500 ? 6 : count > 300 ? 5 : count > 200 ? 5 : count > 100 ? 4 : count > 50 ? 3 : count > 10 ? 2 : 1;
+  const totalSize = baseRadius * 2 + rings * 30 + (isSelected ? 24 : 0);
   const center = totalSize / 2;
+  const radarRadius = baseRadius + rings * 16 + 22;
 
-  // Génération des anneaux SVG
   let ringsSVG = '';
   for (let i = 1; i <= rings; i++) {
-    const r = baseRadius + i * 14;
-    const opacity = 0.35 - i * 0.08;
-    ringsSVG += `<circle cx="${center}" cy="${center}" r="${r}" 
-      fill="none" 
-      stroke="${color}" 
-      stroke-width="${isSelected ? 2.5 : 1.8}" 
-      opacity="${opacity}" 
-      stroke-dasharray="${i > 1 ? '4,3' : 'none'}"
+    const r = baseRadius + i * 16;
+    const opacity = Math.max(0.1, 0.42 - i * 0.055);
+    ringsSVG += `<circle cx="${center}" cy="${center}" r="${r}"
+      fill="none"
+      stroke="${color}"
+      stroke-width="${isSelected ? 3.5 : 2.2}"
+      opacity="${opacity}"
+      stroke-dasharray="${i > 1 ? '4,4' : 'none'}"
+      style="transform-origin:center; transform-box:fill-box; animation: radar-ring ${2.2 + i * 0.25}s ease-out infinite; animation-delay:${i * 0.16}s;"
     />`;
   }
 
-  // Halo de fond flou (gradient radial simulé par cercle semi-transparent)
-  const glowRadius = baseRadius + rings * 14 + 6;
-  const glowHTML = count > 10 ? `
+  const glowRadius = baseRadius + rings * 18 + 14;
+  const glowHTML = `
     <div style="
       position: absolute;
       left: ${center - glowRadius}px;
@@ -101,71 +97,90 @@ const createExtremeIcon = (count, isSelected, isHovered) => {
       width: ${glowRadius * 2}px;
       height: ${glowRadius * 2}px;
       border-radius: 50%;
-      background: radial-gradient(circle, ${color}44 0%, ${color}11 60%, transparent 100%);
+      background: radial-gradient(circle, ${color}40 0%, ${color}16 52%, transparent 100%);
       pointer-events: none;
-    "></div>` : '';
+      filter: blur(2px);
+      animation: radar-breathe 2.4s ease-in-out infinite;
+    "></div>`;
 
-  // Texte dans le cercle
-  const fontSize = count > 999 ? 7 : count > 99 ? 9 : 11;
-  const labelText = count > 0 ? count : '';
-
-  // Effet pulse pour zones critiques
-  const pulseAnim = (count > 200 || isSelected) ? `
-    @keyframes pulse-ring {
-      0% { transform: scale(1); opacity: 0.6; }
-      100% { transform: scale(1.4); opacity: 0; }
-    }` : '';
-
-  const pulseDiv = (count > 200 || isSelected) ? `
+  const sweepHTML = `
     <div style="
       position: absolute;
-      left: ${center - baseRadius - 4}px;
-      top: ${center - baseRadius - 4}px;
-      width: ${(baseRadius + 4) * 2}px;
-      height: ${(baseRadius + 4) * 2}px;
+      left: ${center - radarRadius}px;
+      top: ${center - radarRadius}px;
+      width: ${radarRadius * 2}px;
+      height: ${radarRadius * 2}px;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 0deg, transparent 22deg, ${color}60 40deg, ${color}1a 56deg, transparent 74deg, transparent 360deg);
+      opacity: ${count > 10 ? (isSelected ? 1 : 0.75) : 0};
+      pointer-events: none;
+      animation: radar-rotate ${count > 10 ? '2.8s' : '0s'} linear infinite;
+      filter: blur(1px);
+      mix-blend-mode: screen;
+    "></div>`;
+
+  const pulseHTML = `
+    <div style="
+      position: absolute;
+      left: ${center - baseRadius - 5}px;
+      top: ${center - baseRadius - 5}px;
+      width: ${(baseRadius + 5) * 2}px;
+      height: ${(baseRadius + 5) * 2}px;
       border-radius: 50%;
       border: 2px solid ${color};
-      animation: pulse-ring 1.6s ease-out infinite;
+      opacity: ${isSelected ? 0.95 : 0.55};
+      animation: radar-pulse ${isSelected ? '1.2s' : '1.8s'} ease-out infinite;
       pointer-events: none;
-    "></div>` : '';
+    "></div>`;
+
+  const fontSize = count > 999 ? 18 : count > 99 ? 17 : 16;
+  const labelText = count > 0 ? count : '';
 
   const html = `
-    <style>${pulseAnim}</style>
+    <style>
+      @keyframes radar-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes radar-pulse {
+        0% { transform: scale(0.9); opacity: 0.8; }
+        70% { transform: scale(1.72); opacity: 0; }
+        100% { transform: scale(1.72); opacity: 0; }
+      }
+      @keyframes radar-breathe {
+        0%, 100% { transform: scale(1); opacity: 0.45; }
+        50% { transform: scale(1.12); opacity: 0.2; }
+      }
+    </style>
     <div style="
       position: relative;
       width: ${totalSize}px;
       height: ${totalSize}px;
     ">
       ${glowHTML}
-      ${pulseDiv}
-      <svg 
-        width="${totalSize}" 
-        height="${totalSize}" 
+      ${sweepHTML}
+      ${pulseHTML}
+      <svg
+        width="${totalSize}"
+        height="${totalSize}"
         style="position:absolute;top:0;left:0;overflow:visible;"
         xmlns="http://www.w3.org/2000/svg"
       >
         ${ringsSVG}
-        <!-- Ombre du cercle central -->
-        <circle cx="${center}" cy="${center}" r="${baseRadius + 2}" 
-          fill="${color}" opacity="0.25" />
-        <!-- Cercle central -->
-        <circle cx="${center}" cy="${center}" r="${baseRadius}" 
-          fill="${color}" 
-          stroke="white" 
-          stroke-width="${isSelected ? 3 : isHovered ? 2.5 : 2}" 
-          opacity="${isHovered ? 1 : 0.92}"
+        <circle cx="${center}" cy="${center}" r="${baseRadius + 2}"
+          fill="${color}" opacity="0.34" />
+        <circle cx="${center}" cy="${center}" r="${baseRadius}"
+          fill="${color}"
+          stroke="white"
+          stroke-width="${isSelected ? 4 : isHovered ? 3 : 2.8}"
+          opacity="${isHovered ? 1 : 0.96}"
         />
-        <!-- Reflet brillant -->
-        <circle cx="${center - baseRadius * 0.25}" cy="${center - baseRadius * 0.3}" 
-          r="${baseRadius * 0.35}" 
-          fill="white" opacity="0.2" />
-        <!-- Label count -->
-        <text 
-          x="${center}" y="${center + fontSize * 0.38}" 
-          text-anchor="middle" 
-          font-size="${fontSize}" 
-          font-weight="900" 
-          fill="white" 
+        <circle cx="${center - baseRadius * 0.25}" cy="${center - baseRadius * 0.3}"
+          r="${baseRadius * 0.38}"
+          fill="white" opacity="0.24" />
+        <text
+          x="${center}" y="${center + fontSize * 0.36}"
+          text-anchor="middle"
+          font-size="${fontSize}"
+          font-weight="900"
+          fill="white"
           font-family="system-ui, -apple-system, sans-serif"
           style="text-shadow: 0 1px 2px rgba(0,0,0,0.4)"
         >${labelText}</text>
@@ -178,7 +193,7 @@ const createExtremeIcon = (count, isSelected, isHovered) => {
     html,
     iconSize: [totalSize, totalSize],
     iconAnchor: [center, center],
-    tooltipAnchor: [0, -(baseRadius + rings * 14 + 8)],
+    tooltipAnchor: [0, -(baseRadius + rings * 12 + 14)],
   });
 };
 
@@ -261,17 +276,9 @@ export default function MapTlemcen() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">{t('map_title')}</h1>
-          <p className="page-subtitle">{t('map_subtitle')}</p>
-        </div>
-       
-      </div>
-
       <div className="grid grid-1" style={{ marginBottom: '24px' }}>
-        <div className="card" style={{ padding: 0, overflow: 'hidden', border: 'none' }}>
-          <div className="sig-map-wrapper" style={{ position: 'relative', minHeight: '520px', height: '520px' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', border: 'none', borderRadius: '20px' }}>
+          <div className="sig-map-wrapper" style={{ position: 'relative', minHeight: '640px', height: '640px' }}>
             <MapContainer
               center={defaultCenter}
               zoom={defaultZoom}
@@ -363,37 +370,32 @@ export default function MapTlemcen() {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="card-header" style={{ padding: '16px' }}>
-          <h3 className="sig-chart-title">{t('map_communes')}</h3>
-          <div className="sig-search-wrapper">
-            <span className="sig-search-icon" aria-hidden="true"></span>
-            <input
-              className="sig-search-input"
-              value={searchCommune}
-              onChange={e => setSearchCommune(e.target.value)}
-              placeholder={t('map_filter')}
-            />
-          </div>
+      <div className="card sig-index-card" style={{ marginBottom: '24px' }}>
+        <div className="sig-index-header">
+          <h3 className="sig-chart-title" style={{ marginBottom: 8 }}>{t('map_index')}</h3>
         </div>
-        <div className="sig-communes-grid">
+        <div className="sig-search-wrapper sig-index-search">
+          <span className="sig-search-icon" aria-hidden="true"></span>
+          <input
+            className="sig-search-input"
+            value={searchCommune}
+            onChange={e => setSearchCommune(e.target.value)}
+            placeholder={t('map_filter')}
+          />
+        </div>
+        <div className="sig-index-list">
           {filteredCommunes.map(commune => (
-            <div
+            <button
               key={commune.code}
-              className={`sig-commune-card ${selectedCommune === commune.name ? 'active' : ''}`}
+              type="button"
+              className={`sig-index-item ${selectedCommune === commune.name ? 'active' : ''}`}
               onClick={() => setSelectedCommune(commune.name === selectedCommune ? null : commune.name)}
               onMouseEnter={() => setHoveredCommune(commune.name)}
               onMouseLeave={() => setHoveredCommune(null)}
             >
-              <div className="sig-commune-card-header">
-                <div className="sig-commune-name">{commune.name}</div>
-                <div className="sig-commune-code">{commune.code}</div>
-              </div>
-              <div className="sig-commune-stats">
-                <span className="sig-patient-count">{commune.count}</span>
-                <span className="sig-patient-label">{t('map_patients')}</span>
-              </div>
-            </div>
+              <span className="sig-index-name">{commune.name}</span>
+              <span className="sig-index-code">{commune.code}</span>
+            </button>
           ))}
         </div>
       </div>

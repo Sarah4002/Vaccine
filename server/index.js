@@ -1319,6 +1319,7 @@ async function buildDtPdf(payload) {
   const pdfDoc = await PDFDocument.load(fs.readFileSync(templatePath));
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const DATE_BASELINE_SHIFT = -1.25;
 
   const pages = pdfDoc.getPages();
   const p1 = pages[0];
@@ -1337,6 +1338,10 @@ async function buildDtPdf(payload) {
     }
     pg.drawText(t, { x, y, size, font: f, color: rgb(0, 0, 0) });
   };
+  const drawDate = (pg, value, x, y, size = 10, maxWidth = 350) => {
+    if (!value) return;
+    draw(pg, fmtDate(value), x, y + DATE_BASELINE_SHIFT, size, false, maxWidth);
+  };
 
   draw(p1, patient.nom || '', COORDS_DT_P1.nom.x, COORDS_DT_P1.nom.y, COORDS_DT_P1.nom.size, false, 300);
   draw(p1, patient.prenom || '', COORDS_DT_P1.prenom.x, COORDS_DT_P1.prenom.y, COORDS_DT_P1.prenom.size, false, 300);
@@ -1353,9 +1358,9 @@ async function buildDtPdf(payload) {
 
   const dtDates = proto.dates || {};
   const d1 = dtDates.D1 || vacc.dateAdministration || '';
-  draw(p2, fmtDate(d1), COORDS_DT_P2.dose1.x, COORDS_DT_P2.dose1.y, COORDS_DT_P2.dose1.size);
-  draw(p2, fmtDate(dtDates.D2 || ''), COORDS_DT_P2.dose2m.x, COORDS_DT_P2.dose2m.y, COORDS_DT_P2.dose2m.size);
-  draw(p2, fmtDate(dtDates.D3 || dtDates.Rappel || ''), COORDS_DT_P2.dose1an.x, COORDS_DT_P2.dose1an.y, COORDS_DT_P2.dose1an.size);
+  drawDate(p2, d1, COORDS_DT_P2.dose1.x, COORDS_DT_P2.dose1.y, COORDS_DT_P2.dose1.size);
+  drawDate(p2, dtDates.D2 || '', COORDS_DT_P2.dose2m.x, COORDS_DT_P2.dose2m.y, COORDS_DT_P2.dose2m.size);
+  drawDate(p2, dtDates.D3 || dtDates.Rappel || '', COORDS_DT_P2.dose1an.x, COORDS_DT_P2.dose1an.y, COORDS_DT_P2.dose1an.size);
 
   let rappelDecennal = dtDates.Rappel10 || '';
   if (!rappelDecennal && d1) {
@@ -1365,7 +1370,7 @@ async function buildDtPdf(payload) {
       rappelDecennal = d.toISOString().slice(0, 10);
     } catch {}
   }
-  draw(p2, fmtDate(rappelDecennal), COORDS_DT_P2.dose10.x, COORDS_DT_P2.dose10.y, COORDS_DT_P2.dose10.size);
+  drawDate(p2, rappelDecennal, COORDS_DT_P2.dose10.x, COORDS_DT_P2.dose10.y, COORDS_DT_P2.dose10.size);
 
   const medecinDT = proto.medecin || vacc.medecin || '';
   draw(p2, medecinDT ? `Dr. ${medecinDT}` : '', COORDS_DT_P2.medecin.x, COORDS_DT_P2.medecin.y, COORDS_DT_P2.medecin.size, true, 150);
@@ -1397,6 +1402,11 @@ async function buildVaccinationPdf(payload) {
     if (maxW > 0) while (t.length > 1 && f.widthOfTextAtSize(t, size) > maxW) t = t.slice(0, -1);
     pg.drawText(t, { x, y, size, font: f, color: rgb(0, 0, 0) });
   };
+  const DATE_BASELINE_SHIFT = -1.25;
+  const drawDate = (pg, value, x, y, size = 8, maxW = 0) => {
+    if (!pg || value === null || value === undefined || value === '') return;
+    draw(pg, fmtDate(value), x, y + DATE_BASELINE_SHIFT, size, false, maxW);
+  };
   const dot = (pg, x, y, r = 4) => {
     if (!pg) return;
     pg.drawCircle({ x, y, size: r, color: rgb(0,0,0), borderColor: rgb(0,0,0), borderWidth: 0.3 });
@@ -1422,7 +1432,7 @@ async function buildVaccinationPdf(payload) {
   draw(p1, patient.poids ? `${patient.poids} Kg` : '',   460, 165, 9);
   draw(p1, adresse.slice(0, 62),                          356, 148, 8, false, 218);
   if (adresse.length > 62) draw(p1, adresse.slice(62, 120), 314, 138, 8, false, 258);
-  draw(p1, fmtDate(proto.dateExposition || vacc.dateAdministration), 405, 113, 9, false, 168);
+  drawDate(p1, proto.dateExposition || vacc.dateAdministration, 405, 113, 9, 168);
 
   const gradeCx = { 'Grade I': 380, 'Grade II': 466, 'Grade III': 554 };
   if (gradeCx[proto.grade]) dot(p1, gradeCx[proto.grade], 86, 4);
@@ -1436,8 +1446,8 @@ async function buildVaccinationPdf(payload) {
   }
 
   const TABLE_ROWS = {
-    J0:{y:361},J1:{y:354},J2:{y:346},J3:{y:338},J4:{y:330},J5:{y:323},J6:{y:314},
-    J10:{y:298},J14:{y:291},J24:{y:283},J29:{y:275},J34:{y:267},J90:{y:260},
+    J0:{y:361},J1:{y:353},J2:{y:345},J3:{y:337},J4:{y:329},J5:{y:321},J6:{y:313},
+    J10:{y:297},J14:{y:289},J24:{y:281},J29:{y:273},J34:{y:265},J90:{y:257},
   };
 
   if (type === 'rage') {
@@ -1450,7 +1460,7 @@ async function buildVaccinationPdf(payload) {
       const rowKey = labelToRow[label] || label;
       const rowDef = TABLE_ROWS[rowKey];
       if (!rowDef) return;
-      draw(p1, fmtDate(dateVal), colX, rowDef.y, 7.5, false, 80);
+      drawDate(p1, dateVal, colX, rowDef.y, 7.5, 80);
     });
   }
 
@@ -1475,11 +1485,11 @@ async function buildVaccinationPdf(payload) {
   dot(p2, proto.erig ? 114 : 190, 265, 4);
 
   if (proto.erig) {
-    draw(p2, fmtDate(proto.erigDate),                         136, 246, 8, false, 152);
+    drawDate(p2, proto.erigDate,                              136, 246, 8, 152);
     draw(p2, proto.erigQuantiteTotale ? `${proto.erigQuantiteTotale} ml` : '', 144, 232, 8, false, 122);
     draw(p2, proto.erigQuantiteIM ? `${proto.erigQuantiteIM} ml` : '',         162, 204, 8, false, 54);
     draw(p2, proto.erigLot || '',                              56, 190, 8, false, 222);
-    draw(p2, fmtDate(proto.erigPeremption),                   124, 174, 8, false, 152);
+    drawDate(p2, proto.erigPeremption,                        124, 174, 8, 152);
 
     // III.4 Suture
     if (proto.suture) {
@@ -1492,9 +1502,9 @@ async function buildVaccinationPdf(payload) {
   }
 
   dot(p2, proto.varType === 'cellulaire' ? 142 : 200, 157, 4);
-  draw(p2, fmtDate(vacc.dateAdministration),  133, 137, 8, false, 152);
+  drawDate(p2, vacc.dateAdministration,  133, 137, 8, 152);
   draw(p2, proto.varLot || proto.lot || '',    56, 122, 8, false, 222);
-  draw(p2, fmtDate(proto.varPeremption || proto.peremption), 124, 106, 8, false, 152);
+  drawDate(p2, proto.varPeremption || proto.peremption, 124, 106, 8, 152);
 
   // Voie VAR
   const varVoie = String(proto.varVoieAdmin || proto.varVoie || '').toLowerCase();
@@ -1516,13 +1526,13 @@ async function buildVaccinationPdf(payload) {
       const zagrebMap = { 'J0 (2 sites)':{x:394,y:366},'J7':{x:394,y:336},'J21':{x:394,y:304},'Rappel (J90)':{x:394,y:280} };
       Object.entries(datesVAR).forEach(([label, dateVal]) => {
         const coord = zagrebMap[label];
-        if (coord && dateVal) draw(p2, fmtDate(dateVal), coord.x, coord.y, 7.5, false, 85);
+        if (coord && dateVal) drawDate(p2, dateVal, coord.x, coord.y, 7.5, 85);
       });
     } else {
       const essenMap = { 'J0':{x:488,y:366},'J3':{x:488,y:354},'J7':{x:488,y:336},'J14':{x:488,y:320},'J28':{x:488,y:304} };
       Object.entries(datesVAR).forEach(([label, dateVal]) => {
         const coord = essenMap[label];
-        if (coord && dateVal) draw(p2, fmtDate(dateVal), coord.x, coord.y, 7.5, false, 85);
+        if (coord && dateVal) drawDate(p2, dateVal, coord.x, coord.y, 7.5, 85);
       });
     }
   }
@@ -1550,9 +1560,9 @@ async function buildVaccinationPdf(payload) {
     else if (type === 'meningo') lines.push(`Meningocoque — ${proto.typeVaccin||''} | ${proto.numeroDose||'-'} | Lot: ${proto.lot||'-'}`);
     if (proto.observations) lines.push(`Obs: ${proto.observations}`);
     lines.slice(0, 3).forEach((line, i) => draw(p1, line, 30, 56 - i * 11, 8, false, 202));
-    draw(p2, fmtDate(vacc.dateAdministration), 133, 137, 8, false, 152);
+    drawDate(p2, vacc.dateAdministration, 133, 137, 8, 152);
     draw(p2, proto.lot || '', 56, 122, 8, false, 222);
-    draw(p2, fmtDate(proto.peremption), 124, 106, 8, false, 152);
+    drawDate(p2, proto.peremption, 124, 106, 8, 152);
     draw(p2, `Vaccin: ${vacc.vaccin || type}`, 38, 147, 8, false, 265);
   }
 

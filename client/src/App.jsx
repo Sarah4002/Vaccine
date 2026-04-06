@@ -70,6 +70,7 @@ export default function App() {
   const [page, setPage] = useState('dashboard');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [stocksAlertCount, setStocksAlertCount] = useState(0);
   const [settings, setSettings] = useState({
     langue: 'fr',
     theme: 'light',
@@ -85,6 +86,23 @@ export default function App() {
     }
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    const loadAlertCount = async () => {
+      try {
+        const res = await fetch(`${API}/api/stats`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setStocksAlertCount(Number(data?.stocksCritiques || 0));
+      } catch (err) {
+        console.log('Stocks alert count unavailable');
+      }
+    };
+
+    if (isAuthenticated) {
+      loadAlertCount();
+    }
+  }, [isAuthenticated]);
 
   const loadSettings = async () => {
     try {
@@ -153,7 +171,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
+      <Sidebar page={page} setPage={setPage} onLogout={handleLogout} stocksAlertCount={stocksAlertCount} />
 
       <main className="main-content">
         <header
