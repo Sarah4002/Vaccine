@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { api } from '../utils/api';
 
 export default function Login({ setAuthenticated }) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('serviceepi@chu-tlemcen.dz');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const logoSrc = `${process.env.PUBLIC_URL || '.'}/chu-logo.png`;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,7 +27,7 @@ export default function Login({ setAuthenticated }) {
       setAuthenticated(true);
     } catch (err) {
       // Dans utils/api.js l'erreur retournée est formatée comme un objet ou Error Object standard
-      setError("Identifiants incorrects. Veuillez utiliser l'email de votre choix et le mot de passe 'admin'.");
+      setError("Identifiants incorrects.verifiez votre email et mot de passe.");
     } finally {
       setLoading(false);
     }
@@ -39,8 +40,7 @@ export default function Login({ setAuthenticated }) {
         <div className="login-sphere-bg"></div>
         <div className="login-logo">
           <div className="logo-mark">
-            <div className="logo-icon" style={{background: 'white', color: '#004bce', fontWeight: 'bold'}}>VT</div>
-            <div className="logo-text" style={{color: 'white'}}>Vacci<span>Track</span></div>
+            <div className="logo-text" style={{color: 'white',fontSize:'50'}}>Vacci<span>Track</span></div>
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export default function Login({ setAuthenticated }) {
       <div className="login-right">
         {/* Logo CHU centré avec texte réduit en dessous */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: '36px' }}>
-          <img src="/chu-logo.png" alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
+          <img src={logoSrc} alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
           <div style={{ color: '#1d2129', fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
             Service d'Épidémiologie
           </div>
@@ -77,7 +77,7 @@ export default function Login({ setAuthenticated }) {
               <input 
                 type="email" 
                 className="form-control" 
-                placeholder="nom@hopital.fr" 
+                placeholder="email@chu-tlemcen.dz" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 

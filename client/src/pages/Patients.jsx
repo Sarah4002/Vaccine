@@ -6,9 +6,7 @@ import algeriaData from '../data/algeria.json';
 
 // ─── Impression : Dossier Patient ────────────────────────────────────────────
 function printDossierPatient(patient) {
-  const age = patient.dateNaissance
-    ? Math.floor((Date.now() - new Date(patient.dateNaissance)) / (1000 * 60 * 60 * 24 * 365.25))
-    : '?';
+  const age = getPatientAge(patient);
 
   const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -132,9 +130,7 @@ async function printDossierVaccinal(patient) {
   let vaccinations = [];
   try { vaccinations = await api.getVaccinations({ patientId: patient.id }); } catch {}
 
-  const age = patient.dateNaissance
-    ? Math.floor((Date.now() - new Date(patient.dateNaissance)) / (1000 * 60 * 60 * 24 * 365.25))
-    : '?';
+  const age = getPatientAge(patient);
 
   const rows = vaccinations.map((v, i) => {
     const typeLabel = v.type === 'rage' ? 'Anti-Rabique' : v.type === 'hepb' ? 'Hepatite B' : v.type === 'dt' ? 'DT' : v.vaccin || '—';
@@ -232,7 +228,7 @@ async function printDossierVaccinal(patient) {
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const EMPTY = {
-  nom: '', prenom: '', dateNaissance: '', sexe: 'M',
+  nom: '', prenom: '', dateNaissance: '', age: '', sexe: 'M',
   telephone: '', email: '',
   wilaya: '', daira: '', commune: '', adressePrecise: '',
   poids: '', fonction: '', service: '',
@@ -329,39 +325,26 @@ const MedSection = ({ title, icon, children, defaultOpen = false }) => {
 // ─── Modal Patient (2 étapes) ─────────────────────────────────────────────────
 function PatientModal({ patient, onClose, onSave }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState(patient ? { ...EMPTY, ...patient } : EMPTY);
-  const [age, setAge] = useState('');
+  const [form, setForm] = useState(patient ? { ...EMPTY, ...patient, wilaya: 'Tlemcen' } : { ...EMPTY, wilaya: 'Tlemcen' });
   const [saving, setSaving] = useState(false);
 
   const wilayas = algeriaData.wilayas;
-  const selectedWilaya = wilayas.find(w => w.name === form.wilaya);
+  const selectedWilaya = wilayas.find(w => w.name === 'Tlemcen');
   const dairas = selectedWilaya?.dairas || [];
   const selectedDaira = dairas.find(d => d.name === form.daira);
   const communes = selectedDaira?.communes || [];
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const ageBadge = form.age ? `${form.age} ans` : '';
 
-  useEffect(() => {
-    if (form.dateNaissance) {
-      const birthDate = new Date(form.dateNaissance);
-      const today = new Date();
-      let a = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) a--;
-      setAge(a >= 0 ? `${a} ans` : '');
-    } else {
-      setAge('');
-    }
-  }, [form.dateNaissance]);
-
-  const step1Valid = form.prenom && form.nom && form.dateNaissance && form.wilaya && form.daira && form.commune;
+  const step1Valid = form.prenom && form.nom && form.age && form.wilaya && form.daira && form.commune;
 
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      const data = { ...form };
+      const data = { ...form, wilaya: 'Tlemcen' };
       if (!patient?.id) {
-        const dob = form.dateNaissance.replace(/-/g, '');
+        const dob = form.dateNaissance ? form.dateNaissance.replace(/-/g, '') : `AGE${String(form.age).padStart(3, '0')}`;
         const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
         const rand = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         data.id = `${dob}-${today}-${rand}`;
@@ -397,9 +380,9 @@ function PatientModal({ patient, onClose, onSave }) {
               <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: '#1d2129', marginBottom: 2 }}>
                 {isEditing ? 'Modifier le patient' : 'Nouveau patient'}
               </h2>
-              {age && (
+              {ageBadge && (
                 <span style={{ background: '#ebf2ff', color: '#0056ff', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
-                  {age}
+                  {ageBadge}
                 </span>
               )}
             </div>
@@ -438,8 +421,17 @@ function PatientModal({ patient, onClose, onSave }) {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <Field label="Date de naissance" required>
-                  <input type="date" required value={form.dateNaissance} onChange={e => set('dateNaissance', e.target.value)} style={inputStyle} />
+               <Field label="Âge" required>
+  <input 
+    type="number"
+    value={form.age || ''} 
+    onChange={e => set('age', e.target.value)}
+    placeholder="Saisir l'âge"
+    style={inputStyle}
+  />
+</Field>
+                <Field label="Date de naissance" >
+                  <input type="date" value={form.dateNaissance} onChange={e => set('dateNaissance', e.target.value)} style={inputStyle} />
                 </Field>
                 <Field label="Sexe">
                   <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
@@ -477,6 +469,42 @@ function PatientModal({ patient, onClose, onSave }) {
                   Résidence & Adresse
                 </span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  <Field label="Wilaya" required>
+                    <input required value="Tlemcen" readOnly style={{ ...inputStyle, background: '#ebf2ff', color: '#0056ff', fontWeight: 700 }} />
+                  </Field>
+                  <Field label="DaÃ¯ra" required>
+                    <>
+                      <input
+                        required
+                        list="patient-daira-options"
+                        value={form.daira}
+                        onChange={e => { set('daira', e.target.value); set('commune', ''); }}
+                        placeholder="Rechercher une daira..."
+                        style={inputStyle}
+                      />
+                      <datalist id="patient-daira-options">
+                        {dairas.map(d => <option key={d.name} value={d.name} />)}
+                      </datalist>
+                    </>
+                  </Field>
+                  <Field label="Commune" required>
+                    <>
+                      <input
+                        required
+                        list="patient-commune-options"
+                        value={form.commune}
+                        onChange={e => set('commune', e.target.value)}
+                        placeholder="Rechercher une commune..."
+                        style={{ ...inputStyle, opacity: !form.daira ? .5 : 1 }}
+                        disabled={!form.daira}
+                      />
+                      <datalist id="patient-commune-options">
+                        {communes.map(c => <option key={c} value={c} />)}
+                      </datalist>
+                    </>
+                  </Field>
+                </div>
+                <div style={{ display: 'none' }}>
                   <Field label="Wilaya" required>
                     <select required value={form.wilaya}
                       onChange={e => { set('wilaya', e.target.value); set('daira', ''); set('commune', ''); }}
@@ -547,7 +575,7 @@ function PatientModal({ patient, onClose, onSave }) {
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, color: '#1d2129', fontSize: 14 }}>{form.prenom} {form.nom}</div>
-                  <div style={{ fontSize: 11, color: '#8a94a6' }}>{age} · {form.sexe === 'M' ? 'Homme' : 'Femme'}</div>
+                  <div style={{ fontSize: 11, color: '#8a94a6' }}>{ageBadge || 'Age non renseigne'} · {form.sexe === 'M' ? 'Homme' : 'Femme'}</div>
                 </div>
                 <div style={{ marginLeft: 'auto', fontSize: 11, color: '#0056ff', fontWeight: 600 }}>Dossier médical</div>
               </div>
@@ -576,35 +604,6 @@ function PatientModal({ patient, onClose, onSave }) {
                   <textarea value={form.traitementEnCours} onChange={e => set('traitementEnCours', e.target.value)}
                     placeholder="Médicaments actuels, posologie…" style={textareaStyle} />
                 </Field>
-              </MedSection>
-
-              <MedSection title="Mode de vie" icon="">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                  <Field label="Tabagisme">
-                    <select value={form.fumeur} onChange={e => set('fumeur', e.target.value)} style={inputStyle}>
-                      <option value="">Non renseigné</option>
-                      <option value="non">Non-fumeur</option>
-                      <option value="ancien">Ancien fumeur</option>
-                      <option value="oui">Fumeur actif</option>
-                    </select>
-                  </Field>
-                  <Field label="Alcool">
-                    <select value={form.alcool} onChange={e => set('alcool', e.target.value)} style={inputStyle}>
-                      <option value="">Non renseigné</option>
-                      <option value="non">Non</option>
-                      <option value="occasionnel">Occasionnel</option>
-                      <option value="regulier">Régulier</option>
-                    </select>
-                  </Field>
-                  <Field label="Activité physique">
-                    <select value={form.activitePhysique} onChange={e => set('activitePhysique', e.target.value)} style={inputStyle}>
-                      <option value="">Non renseigné</option>
-                      <option value="sedentaire">Sédentaire</option>
-                      <option value="moderee">Modérée</option>
-                      <option value="intense">Intense</option>
-                    </select>
-                  </Field>
-                </div>
               </MedSection>
 
               <MedSection title="Informations administratives" icon="">
@@ -712,7 +711,15 @@ function PatientModal({ patient, onClose, onSave }) {
 
 // ─── Calcul âge ───────────────────────────────────────────────────────────────
 function calcAge(dob) {
+  if (!dob) return '?';
   return Math.floor((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+}
+
+function getPatientAge(patient) {
+  if (patient?.age !== null && patient?.age !== undefined && String(patient.age).trim() !== '') {
+    return String(patient.age);
+  }
+  return calcAge(patient?.dateNaissance);
 }
 
 function formatDate(d) {
@@ -896,11 +903,12 @@ const InfoItem = ({ label, value, full }) => (
 
 // ─── Page Détail Patient ──────────────────────────────────────────────────────
 function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
+  const currentYear = String(new Date().getFullYear());
   const [vaccinations, setVaccinations] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [activeTab, setActiveTab]       = useState('vaccins');
 
-  const age         = calcAge(patient.dateNaissance);
+  const age         = getPatientAge(patient);
   const sexeCouleur = patient.sexe === 'M' ? '#0056ff' : '#ec4899';
   const sexeBg      = patient.sexe === 'M' ? '#ebf2ff' : '#fce7f3';
   const initiales   = `${patient.prenom?.[0] || ''}${patient.nom?.[0] || ''}`.toUpperCase();
@@ -909,10 +917,10 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      try { setVaccinations(await api.getVaccinations({ patientId: patient.id })); } catch {}
+      try { setVaccinations(await api.getVaccinations({ patientId: patient.id, year: currentYear })); } catch {}
       setLoading(false);
     })();
-  }, [patient.id]);
+  }, [patient.id, currentYear]);
 
   const vaccsByType = {
     rage: vaccinations.filter(v => v.type === 'rage').length,
@@ -1207,6 +1215,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
 
 // ─── Page Patients (principale) ───────────────────────────────────────────────
 export default function Patients({ setPage, setSelectedPatient }) {
+  const currentYear = String(new Date().getFullYear());
   const [patients, setPatients]                         = useState([]);
   const [search, setSearch]                             = useState('');
   const [modal, setModal]                               = useState(null);
@@ -1217,12 +1226,13 @@ export default function Patients({ setPage, setSelectedPatient }) {
 
   const load = async () => {
     setLoading(true);
-    const data = await api.getPatients(search);
+    const hasSearch = search.trim().length > 0;
+    const data = await api.getPatients(search, hasSearch ? {} : { year: currentYear });
     setPatients(data);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [search]);
+  useEffect(() => { load(); }, [search, currentYear]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Voulez-vous vraiment supprimer ce patient et l\'intégralité de son carnet vaccinal ?')) {
@@ -1315,7 +1325,7 @@ export default function Patients({ setPage, setSelectedPatient }) {
               <tbody>
                 {patients.map((p, i) => {
                   const initiales   = `${p.prenom[0]}${p.nom[0]}`.toUpperCase();
-                  const age         = p.dateNaissance ? `${calcAge(p.dateNaissance)} ans` : '?';
+                  const age         = `${getPatientAge(p)} ans`;
                   const sexeCouleur = p.sexe === 'M' ? '#0056ff' : '#ec4899';
                   const sexeBg      = p.sexe === 'M' ? '#ebf2ff' : '#fce7f3';
                   const hasMedical  = p.antecedents || p.allergies || p.maladiesChroniques || p.traitementEnCours;

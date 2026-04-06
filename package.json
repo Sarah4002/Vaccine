@@ -1,15 +1,52 @@
 {
   "name": "vaccitrack",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "electron-main.js",
   "scripts": {
     "install:all": "cd server && npm install && cd ../client && npm install",
     "start:server": "cd server && node index.js",
     "start:client": "cd client && npm start",
-    "electron": "electron .",
-    "start": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run electron\""
+    "electron": "npx electron .",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run electron\"",
+    "rebuild:server-native": "electron-rebuild -f -v 41.1.0 -m .\\server -w better-sqlite3",
+    "build:client": "cd client && npm run build:electron",
+    "build": "npm run build:client && npm run rebuild:server-native && electron-builder"
   },
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "multer": "^2.1.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^41.1.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "files": [
+      "electron-main.js",
+      "main.js",
+      "client/build-electron-app/**/*",
+      "client/build-electron/**/*",
+      "client/build/**/*",
+      "client/package.json",
+      "server/**/*.js",
+      "server/**/*.json",
+      "server/**/*.pdf",
+      "server/**/*.ps1",
+      "server/**/*.py",
+      "server/node_modules/**/*",
+      "!server/uploads_tmp{,/**/*}",
+      "!server/*.db",
+      "!server/*.db-shm",
+      "!server/*.db-wal",
+      "!server/ANTIRAB*.xlsx",
+      "!server/~$*.xlsx"
+    ],
+    "asarUnpack": [
+      "server/node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "icon": "build/icon.ico"
+    }
   }
 }

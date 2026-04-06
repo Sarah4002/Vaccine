@@ -5,23 +5,27 @@ import VaccinModal, { PROTOCOLES } from '../components/VaccinModal';
 // --- LISTE PRINCIPALE ---
 
 export default function Vaccinations({ selectedPatient, setSelectedPatient }) {
+  const currentYear = String(new Date().getFullYear());
   const [vaccinations, setVaccinations] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [search, setSearch] = useState('');
   const [modal, setModal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   const load = async () => {
     setLoading(true);
+    const hasSearch = search.trim().length > 0;
     const [v, p] = await Promise.all([
-      api.getVaccinations({}),
-      api.getPatients()
+      api.getVaccinations(hasSearch ? {} : { year: currentYear }),
+      api.getPatients('', hasSearch ? {} : { year: currentYear })
     ]);
     setVaccinations(v);
     setPatients(p);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [search, currentYear]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Supprimer ce certificat officiel ?')) {
@@ -30,23 +34,82 @@ export default function Vaccinations({ selectedPatient, setSelectedPatient }) {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const { blob, contentDisposition } = await api.exportPatientsDatabase();
+      const match = contentDisposition.match(/filename=\"?([^\"]+)\"?/i);
+      const downloadName = match?.[1] || `vaccitrack_export_patients_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = downloadName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors de l'export :", error);
+      window.alert("Impossible d'exporter la base de donnees pour le moment.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const searchTerm = search.trim().toLowerCase();
+  const filteredVaccinations = vaccinations.filter(v =>
+    !searchTerm ||
+    v.patient?.toLowerCase().includes(searchTerm) ||
+    v.vaccin?.toLowerCase().includes(searchTerm) ||
+    v.type?.toLowerCase().includes(searchTerm) ||
+    String(v.protocoleData?.grade || '').toLowerCase().includes(searchTerm) ||
+    String(v.protocoleData?.schema || '').toLowerCase().includes(searchTerm)
+  );
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Certificats & Protocoles</h1>
           <p style={{ color: '#8a94a6', fontSize: 14 }}>Registres officiels Anti-Rabique, Hépatite B et DT.</p>
         </div>
-        <button onClick={() => setModal('create')} style={{ background: '#0056ff', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,86,255,0.2)' }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l-2 2 4 4 2-2-4-4z"></path><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z"></path><line x1="14" y1="10" x2="4" y2="20"></line></svg>
-          Saisir un Registre
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            style={{ background: '#ffffff', color: '#0056ff', border: '1px solid #cfe0ff', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: exporting ? 'wait' : 'pointer' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 3v12"></path>
+              <path d="M7 10l5 5 5-5"></path>
+              <path d="M5 21h14"></path>
+            </svg>
+            {exporting ? 'Export en cours...' : 'Exporter en .xlsx'}
+          </button>
+          <button onClick={() => setModal('create')} style={{ background: '#0056ff', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,86,255,0.2)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l-2 2 4 4 2-2-4-4z"></path><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z"></path><line x1="14" y1="10" x2="4" y2="20"></line></svg>
+            Saisir un Registre
+          </button>
+        </div>
       </div>
 
       <div className="card" style={{ border: 'none', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Registres Vaccinaux ({filteredVaccinations.length})</h3>
+          <div style={{ position: 'relative', width: '350px' }}>
+            <svg style={{ position: 'absolute', left: 16, top: 10, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input
+              type="text"
+              placeholder="Rechercher un patient, vaccin, grade ou schema..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ padding: '10px 16px 10px 42px', borderRadius: '50px', border: '1px solid #eaebef', background: '#f4f5f9', outline: 'none', fontSize: 13, width: '100%', color: '#1d2129' }}
+            />
+          </div>
+        </div>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>Chargement...</div>
-        ) : vaccinations.length === 0 ? (
+        ) : filteredVaccinations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8a94a6', background: '#f4f5f9', borderRadius: '12px' }}>
             Aucun certificat enregistré.
           </div>
@@ -63,9 +126,9 @@ export default function Vaccinations({ selectedPatient, setSelectedPatient }) {
                 </tr>
               </thead>
               <tbody>
-                {vaccinations.map((v, i) => {
+                {filteredVaccinations.map((v, i) => {
                   return (
-                    <tr key={v.id} style={{ borderBottom: i < vaccinations.length-1 ? '1px solid #eaebef' : 'none' }}>
+                    <tr key={v.id} style={{ borderBottom: i < filteredVaccinations.length-1 ? '1px solid #eaebef' : 'none' }}>
                       <td style={{ padding: '16px 8px', fontWeight: 600, fontSize: 13, color: '#1d2129' }}>
                         {new Date(v.dateAdministration || Date.now()).toLocaleDateString('fr-FR')}
                       </td>

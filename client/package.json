@@ -2,6 +2,7 @@
   "name": "vaccine-tracker-client",
   "version": "1.0.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
@@ -13,7 +14,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
+    "build": "react-scripts build",
+    "build:electron": "powershell -NoProfile -Command \"$env:BUILD_PATH='build-electron-app'; react-scripts build\""
   },
   "proxy": "http://localhost:3001",
   "browserslist": {

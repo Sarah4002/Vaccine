@@ -15,13 +15,7 @@ const BOTTOM_NAV = [
   { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>, label: 'Support', id: 'support' }
 ];
 
-export default function Sidebar({ page, setPage, setIsAuthenticated }) {
-
-  const handleLogout = () => {
-    localStorage.removeItem('vaccitrack_token');
-    localStorage.removeItem('vaccitrack_user');
-    setIsAuthenticated(false);
-  };
+export default function Sidebar({ page, setPage, onLogout }) {
 
   return (
     <aside className="sidebar">
@@ -65,7 +59,7 @@ export default function Sidebar({ page, setPage, setIsAuthenticated }) {
 
        
         <button 
-          onClick={handleLogout}
+          onClick={onLogout}
           style={{ 
             background: '#fef2f2', 
             color: '#ef4444', 

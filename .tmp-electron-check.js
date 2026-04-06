@@ -1,0 +1,1 @@
+try { const m = require('electron/main'); console.log(Object.keys(m)); console.log(typeof m.app, !!m.app, m.app && typeof m.app.whenReady); } catch (e) { console.error(e.stack || e.message); process.exitCode = 1; } setTimeout(() => process.exit(), 1000);

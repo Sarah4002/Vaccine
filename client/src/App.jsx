@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
-//import './styles/theme.css';
+import './styles/theme.css';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -14,6 +14,57 @@ import Support from './pages/Support';
 import Login from './pages/Login';
 
 const API = process.env.REACT_APP_API || 'http://localhost:3001';
+
+class PageErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      errorMessage: error?.message || 'Erreur inconnue',
+    };
+  }
+
+  componentDidCatch(error) {
+    console.error('Page render error:', error);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, errorMessage: '' });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            background: 'var(--color-header-bg)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '20px',
+            padding: '32px',
+            boxShadow: 'var(--shadow-lg)',
+          }}
+        >
+          <h2 style={{ marginBottom: '8px', color: 'var(--color-text-primary)', fontFamily: 'Syne, sans-serif' }}>
+            Cette page a rencontre une erreur
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+            Rechargez l'application ou revenez a une autre section depuis le menu lateral.
+          </p>
+          <p style={{ color: '#ef4444', margin: '12px 0 0', fontSize: '13px', fontFamily: 'monospace' }}>
+            {this.state.errorMessage}
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [page, setPage] = useState('dashboard');
@@ -69,27 +120,28 @@ export default function App() {
   };
 
   const renderPage = () => {
+    const wrap = (node) => <PageErrorBoundary key={page} resetKey={page}>{node}</PageErrorBoundary>;
     switch (page) {
       case 'dashboard':
-        return <Dashboard setPage={setPage} />;
+        return wrap(<Dashboard setPage={setPage} />);
       case 'patients':
-        return <Patients setPage={setPage} setSelectedPatient={setSelectedPatient} />;
+        return wrap(<Patients setPage={setPage} setSelectedPatient={setSelectedPatient} />);
       case 'vaccinations':
-        return <Vaccinations selectedPatient={selectedPatient} setSelectedPatient={setSelectedPatient} />;
+        return wrap(<Vaccinations selectedPatient={selectedPatient} setSelectedPatient={setSelectedPatient} />);
       case 'rappels':
-        return <Rappels />;
+        return wrap(<Rappels />);
       case 'pharmacy':
-        return <Pharmacy />;
+        return wrap(<Pharmacy />);
       case 'map-tlemcen':
-        return <MapTlemcen />;
+        return wrap(<MapTlemcen />);
       case 'settings':
-        return <Settings />;
+        return wrap(<Settings />);
       case 'help-center':
-        return <HelpCenter />;
+        return wrap(<HelpCenter />);
       case 'support':
-        return <Support />;
+        return wrap(<Support />);
       default:
-        return <Dashboard setPage={setPage} />;
+        return wrap(<Dashboard setPage={setPage} />);
     }
   };
 
@@ -97,13 +149,16 @@ export default function App() {
     return <Login setAuthenticated={setIsAuthenticated} />;
   }
 
+  const logoSrc = `${process.env.PUBLIC_URL || '.'}/chu-logo.png`;
+
   return (
     <div className="app-layout">
-      <Sidebar page={page} setPage={setPage} />
+      <Sidebar page={page} setPage={setPage} onLogout={handleLogout} />
 
       <main className="main-content">
         <header
           style={{
+            width: '100%',
             background: 'var(--color-header-bg)',
             padding: '24px',
             borderRadius: '20px',
@@ -114,7 +169,7 @@ export default function App() {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <img src="/chu-logo.png" alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
+            <img src={logoSrc} alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
             <div style={{ color: 'var(--color-text-primary)', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
               Service d'Epidemiologie
             </div>
@@ -123,31 +178,6 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ position: 'absolute', top: '24px', right: '24px' }}>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                padding: '8px 16px',
-                borderRadius: '50px',
-                fontSize: '11px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Deconnexion
-            </button>
-          </div>
         </header>
         {renderPage()}
       </main>

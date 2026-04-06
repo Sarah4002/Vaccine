@@ -14,3 +14,17 @@ server/*.db-shm
 server/*.db-wal
 .env
 build/
+
+# Generated build/artifact directories
+client/build-electron-app/
+client/build-electron/
+client/build-verify-export/
+dist/
+.tmp-packaged-data*
+server/uploads_tmp/
+
+# SQLite temporary files
+*.db-journal
+*.sqlite-journal
+*.db-shm
+*.db-wal

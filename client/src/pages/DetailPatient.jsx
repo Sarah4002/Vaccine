@@ -525,7 +525,7 @@ export default function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrd
             <div style={{ background: 'white', borderRadius: 16, border: '1px solid #eaebef', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <div style={{ padding: '14px 20px', borderBottom: '1px solid #f0f1f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ebf2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>💉</div>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ebf2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#0056ff' }}>VAC</div>
                   <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 14, color: '#1d2129' }}>Historique des Vaccinations</span>
                 </div>
                 <span style={{ fontSize: 12, color: '#8a94a6', fontWeight: 600 }}>Cliquez sur une ligne pour les détails</span>
