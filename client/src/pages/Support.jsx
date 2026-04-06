@@ -145,7 +145,7 @@ export default function Support() {
             <h4 style={{ marginBottom: '12px' }}>{t('sup_contacts')}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a href="mailto:derkaouitema9@gmail.com" className="sup-contact-link">derkaouitema9@gmail.com</a>
-              <a href="mailto:sarahbelmahi378@gmail.com" className="sup-contact-link">sarahbelmahi378@gmail.com</a>
+              <a href="mailto:sarabelmahi378@gmail.com" className="sup-contact-link">sarahbelmahi378@gmail.com</a>
               <a href="tel:0554199024" className="sup-contact-link">0554 19 90 24</a>
               <a href="tel:0561148201" className="sup-contact-link">0561 14 82 01</a>
             </div>

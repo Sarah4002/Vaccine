@@ -593,6 +593,7 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 export default function Dashboard({ setPage }) {
   const currentYear = String(new Date().getFullYear());
+  const calendarSectionRef = useRef(null);
 
   const [stats, setStats]               = useState(null);
   const [rappels, setRappels]           = useState([]);
@@ -603,6 +604,7 @@ export default function Dashboard({ setPage }) {
   const [filters, setFilters]           = useState({ annee: currentYear, mois: '', jour: '', sexe: '', ageMin: '', ageMax: '' });
   const [tableStatusFilter, setTableStatusFilter] = useState('all');
   const [tableFilterOpen, setTableFilterOpen]     = useState(false);
+  const [notificationOpen, setNotificationOpen]   = useState(false);
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('app_theme');
     if (saved === 'dark' || saved === 'light') return saved;
@@ -648,11 +650,26 @@ export default function Dashboard({ setPage }) {
     return () => document.removeEventListener('click', closeFilterMenu);
   }, []);
 
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todaysAppointments = rappels.filter(r => r.dateProchaineDose && r.dateProchaineDose.slice(0, 10) === todayKey);
+  const urgentNotificationCount = rappels.filter(r => r.urgent || r.enRetard).length;
+  const notificationBadgeCount = todaysAppointments.length > 0 ? todaysAppointments.length : urgentNotificationCount;
+
+  useEffect(() => {
+    setNotificationOpen(todaysAppointments.length > 0);
+  }, [todaysAppointments.length]);
+
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('app_theme', next);
+  };
+
+  const openCalendarSection = () => {
+    setNotificationOpen(false);
+    calendarSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   
@@ -710,12 +727,64 @@ export default function Dashboard({ setPage }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {/* Cloche rappels */}
-          <div style={{ position: 'relative', width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #eaebef', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8a94a6' }} onClick={() => setPage('rappels')}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            {rappels.filter(r => r.urgent || r.enRetard).length > 0 && (
-              <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: COLORS.red, border: '1.5px solid white' }} />
+          <div style={{ position: 'relative' }}>
+            <div
+              style={{ position: 'relative', width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #eaebef', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: notificationOpen ? COLORS.blue : '#8a94a6' }}
+              onClick={() => {
+                if (todaysAppointments.length > 0) {
+                  setNotificationOpen(open => !open);
+                  return;
+                }
+                setPage('rappels');
+              }}
+              title={todaysAppointments.length > 0 ? 'Notifications du jour' : 'Voir les rappels'}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {notificationBadgeCount > 0 && (
+                <span style={{ position: 'absolute', top: 6, right: 6, minWidth: todaysAppointments.length > 0 ? 18 : 8, height: todaysAppointments.length > 0 ? 18 : 8, padding: todaysAppointments.length > 0 ? '0 5px' : 0, borderRadius: '999px', background: todaysAppointments.length > 0 ? COLORS.blue : COLORS.red, border: '1.5px solid white', color: 'white', fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {todaysAppointments.length > 0 ? todaysAppointments.length : ''}
+                </span>
+              )}
+            </div>
+
+            {notificationOpen && todaysAppointments.length > 0 && (
+              <div style={{ position: 'absolute', top: 50, right: 0, width: 300, background: 'white', border: `1px solid ${COLORS.blue}22`, borderRadius: 16, boxShadow: '0 18px 40px rgba(0,0,0,0.12)', padding: 16, zIndex: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: COLORS.blue + '14', color: COLORS.blue, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>
+                      Nouveau rendez-vous aujourd'hui
+                    </div>
+                    <div style={{ fontSize: 12, lineHeight: 1.5, color: '#5b6474' }}>
+                      Il y a {todaysAppointments.length} nouveau{todaysAppointments.length > 1 ? 'x' : ''}  rendez-vous est prévu aujourd'hui. Consultez votre calendrier.
+
+Voir le calendrier
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    onClick={openCalendarSection}
+                    style={{ flex: 1, border: 'none', borderRadius: 10, background: COLORS.blue, color: 'white', fontWeight: 700, fontSize: 12, padding: '10px 12px', cursor: 'pointer' }}
+                  >
+                    Voir le calendrier
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotificationOpen(false)}
+                    style={{ border: '1px solid #eaebef', borderRadius: 10, background: 'white', color: '#8a94a6', fontWeight: 700, fontSize: 12, padding: '10px 12px', cursor: 'pointer' }}
+                  >
+                    Fermer
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -791,7 +860,7 @@ export default function Dashboard({ setPage }) {
       </div>
 
       {/* ── CHART + CALENDAR ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginTop: 20, marginBottom: 28 }}>
+      <div ref={calendarSectionRef} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginTop: 20, marginBottom: 28 }}>
         {/* Graphique vaccinations */}
         <div className="card" style={{ padding: '16px', border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

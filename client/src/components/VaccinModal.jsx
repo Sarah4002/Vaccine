@@ -93,7 +93,7 @@ const StepCard = ({ label, color = '#0056ff', children }) => (
 const SectionBox = ({ title, icon, color = '#0056ff', children }) => (
   <div style={{ border: '1px solid #eaebef', borderRadius: 14, overflow: 'hidden', marginBottom: 2, background: 'white' }}>
     <div style={{ background: `${color}0d`, borderBottom: '1px solid #eaebef', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontSize: 16 }}>{icon}</span>
+      {icon && <span style={{ fontSize: 16 }}>{icon}</span>}
       <span style={{ fontWeight: 800, fontSize: 12, color, textTransform: 'uppercase', letterSpacing: '0.6px' }}>{title}</span>
     </div>
     <div style={{ padding: '18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -270,7 +270,7 @@ function GrippeSection({ grippe, setGrippe }) {
   const nextYear    = currentYear + 1;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Vaccin Antigrippal Saisonnier" icon="" color="#0056ff">
+      <SectionBox title="Vaccin Antigrippal Saisonnier" color="#0056ff">
         <Field label="Saison vaccinale" required span={2}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[`${currentYear-1}-${currentYear}`, `${currentYear}-${nextYear}`, `${nextYear}-${nextYear+1}`].map(s => (
@@ -332,7 +332,7 @@ function PneumoSection({ pneumo, setPneumo }) {
   const uP = (k, v) => setPneumo(p => ({ ...p, [k]: v }));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Vaccin Anti-Pneumococcique" icon="" color="#0056ff">
+      <SectionBox title="Vaccin Anti-Pneumococcique" color="#0056ff">
         <Field label="Type de vaccin" required span={2}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {PROTOCOLES.pneumo.types.map(t => (
@@ -400,7 +400,7 @@ function MeningoSection({ meningo, setMeningo }) {
   const uM = (k, v) => setMeningo(p => ({ ...p, [k]: v }));
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Vaccin Anti-Meningococcique" icon="" color="#0056ff">
+      <SectionBox title="Vaccin Anti-Meningococcique" color="#0056ff">
         <Field label="Type de vaccin" required span={2}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {PROTOCOLES.meningo.types.map(t => (
@@ -481,13 +481,11 @@ function RageSection({ rage, setRage, patient }) {
   const tissDoses = rage.grade === 'Grade III' ? doseLabelsGradeIII : doseLabelsGradeII;
   const doseDates = rage.varType === 'cellulaire' ? cellDoses : tissDoses;
 
-  // ── Gestion du calcul auto des dates VAR ──────────────────────────────────
   const handleVARDateChange = (label, value, isJ0) => {
     const currentDates  = { ...(rage.datesVAR    || {}) };
     const currentManuel = { ...(rage.datesVARManuel || {}) };
 
     if (isJ0) {
-      // Recalcul de toutes les dates non-manuelles
       currentDates[label] = value;
       if (value) {
         const auto = computeAutoVARDates(value, rage.varType, rage.cellulProtocole, rage.grade, currentManuel);
@@ -497,7 +495,6 @@ function RageSection({ rage, setRage, patient }) {
       }
       setRage(p => ({ ...p, datesVAR: currentDates, datesVARManuel: currentManuel }));
     } else {
-      // Modification manuelle
       currentDates[label] = value;
       setRage(p => ({ ...p, datesVAR: currentDates }));
     }
@@ -508,7 +505,6 @@ function RageSection({ rage, setRage, patient }) {
     const isNowManuel   = !currentManuel[label];
     currentManuel[label] = isNowManuel;
 
-    // Si on repasse en auto: recalculer depuis J0 si disponible
     if (!isNowManuel) {
       const j0Label = rage.varType === 'cellulaire' && rage.cellulProtocole === 'ZAGREB'
         ? 'J0 (2 Doses)' : 'J0';
@@ -530,7 +526,7 @@ function RageSection({ rage, setRage, patient }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       {/* EXPOSITION & GRADE */}
-      <SectionBox title="Exposition et Grade" icon="" color="#0056ff">
+      <SectionBox title="Exposition et Grade" color="#0056ff">
         <Field label="Grade d'Exposition" required span={2}>
           <RadioGroup options={['Grade I','Grade II','Grade III']} value={rage.grade} onChange={v => uR('grade', v)} color="#0056ff" />
         </Field>
@@ -577,7 +573,7 @@ function RageSection({ rage, setRage, patient }) {
       </SectionBox>
 
       {/* III.1 SOINS LOCAUX */}
-      <SectionBox title="III.1 - Soins Locaux de la Plaie" icon="" color="#0056ff">
+      <SectionBox title="III.1 - Soins Locaux de la Plaie" color="#0056ff">
         <Field label="Soins effectues" span={2}>
           <RadioGroup
             options={[{id:'non',label:'Non'},{id:'oui',label:'Oui, soins locaux effectues'}]}
@@ -602,7 +598,7 @@ function RageSection({ rage, setRage, patient }) {
 
       {/* III.2 ERIG */}
       {rage.grade === 'Grade III' && (
-        <SectionBox title="III.2 - Immunoglobulines Anti-Rabiques Equines (ERIG)" icon="" color="#0056ff">
+        <SectionBox title="III.2 - Immunoglobulines Anti-Rabiques Equines (ERIG)" color="#0056ff">
           <Field label="ERIG administre" span={2}>
             <RadioGroup
               options={[{id:'non',label:'Non'},{id:'oui',label:'Oui, preciser'}]}
@@ -715,7 +711,7 @@ function RageSection({ rage, setRage, patient }) {
       </div>
 
       {/* III.4 SUTURE */}
-      <SectionBox title="III.4 - Suture de la / des Plaies" icon="" color="#0056ff">
+      <SectionBox title="III.4 - Suture de la / des Plaies" color="#0056ff">
         <Field label="Suture effectuee" span={2}>
           <RadioGroup options={[{id:'non',label:'Non'},{id:'oui',label:'Oui, preciser'}]} value={rage.suture ? 'oui' : (rage.suture === false ? 'non' : '')} onChange={v => uR('suture', v === 'oui')} color="#0056ff" />
         </Field>
@@ -760,7 +756,7 @@ function RageSection({ rage, setRage, patient }) {
       </div>
 
       {/* III.5 VACCINATION ANTIRABIQUE VAR */}
-      <SectionBox title="III.5 - Vaccination Antirabique (VAR)" icon="" color="#0056ff">
+      <SectionBox title="III.5 - Vaccination Antirabique (VAR)" color="#0056ff">
         <Field label="Type de vaccin" span={2}>
           <RadioGroup
             options={[{id:'tissulaire',label:'Vaccin Tissulaire'},{id:'cellulaire',label:'Vaccin Cellulaire'}]}
@@ -786,7 +782,6 @@ function RageSection({ rage, setRage, patient }) {
           <input style={inputStyle} placeholder="0.5 ml" value={rage.varDose||'0.5'} onChange={e => uR('varDose', e.target.value)} />
         </Field>
 
-        {/* Voie d'Administration VAR */}
         <Field label="Voie d'Administration" span={2}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 14px', border: '1px solid #eaebef', borderRadius: 8, background: '#f8f9fb' }}>
             {['Sous cutanees', 'Intradermique', 'Intra musculaire'].map(voie => (
@@ -818,7 +813,6 @@ function RageSection({ rage, setRage, patient }) {
 
               return (
                 <div key={j}>
-                  {/* Entête label + bouton modifier/verrouiller */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <label style={{
                       fontSize: '11px', fontWeight: 700,
@@ -853,7 +847,6 @@ function RageSection({ rage, setRage, patient }) {
                     )}
                   </div>
 
-                  {/* Champ date */}
                   <input
                     type="date"
                     value={rage.datesVAR?.[j] || ''}
@@ -880,7 +873,6 @@ function RageSection({ rage, setRage, patient }) {
                     }}
                   />
 
-                  {/* Indicateur statut */}
                   {!isJ0 && (
                     <div style={{
                       marginTop: 3, fontSize: 10, fontWeight: 700,
@@ -897,7 +889,7 @@ function RageSection({ rage, setRage, patient }) {
       </SectionBox>
 
       {/* INFORMATIONS COMPLEMENTAIRES */}
-      <SectionBox title="Informations Complementaires" icon="" color="#0056ff">
+      <SectionBox title="Informations Complementaires" color="#0056ff">
         <Field label="Medecin">
           <input style={inputStyle} value={rage.medecin||''} onChange={e => uR('medecin', e.target.value)} />
         </Field>
@@ -921,7 +913,7 @@ function HepbSection({ hepb, setHepb }) {
   const doses  = schema?.doses || [];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Schema de Vaccination Hepatite B" icon="" color="#0056ff">
+      <SectionBox title="Schema de Vaccination Hepatite B" color="#0056ff">
         <Field label="Schema" span={2}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
             {PROTOCOLES.hepb.schemas.map(s => (
@@ -964,39 +956,247 @@ function HepbSection({ hepb, setHepb }) {
   );
 }
 
-// ── DT ────────────────────────────────────────────────────────────────────────
+// ── Utilitaire : ajouter N mois à une date ISO ────────────────────────────
+function addMonthsDT(isoDate, months) {
+  if (!isoDate) return '';
+  try {
+    const d = new Date(isoDate);
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString().slice(0, 10);
+  } catch { return ''; }
+}
+
+// ── Utilitaire : ajouter N ans à une date ISO ─────────────────────────────
+function addYearsDT(isoDate, years) {
+  if (!isoDate) return '';
+  try {
+    const d = new Date(isoDate);
+    d.setFullYear(d.getFullYear() + years);
+    return d.toISOString().slice(0, 10);
+  } catch { return ''; }
+}
+
+// ── DT SECTION — même design de grille que les dates VAR anti-rabiques ───────
 function DtSection({ dt, setDt }) {
   const uD = (k, v) => setDt(p => ({ ...p, [k]: v }));
+
+  // Définition des doses avec leur offset de calcul
+  const dtDoses = [
+    { key: 'D1',     label: '1ere dose',     sublabel: 'Date de debut',  isBase: true,  manualFlag: null },
+    { key: 'D2',     label: 'D2',            sublabel: 'D1 + 2 mois',    isBase: false, manualFlag: '_d2Manuel' },
+    { key: 'D3',     label: 'D3',            sublabel: 'D1 + 1 an',      isBase: false, manualFlag: '_d3Manuel' },
+    { key: 'Rappel', label: 'Rappel',        sublabel: 'D1 + 10 ans',    isBase: false, manualFlag: '_rappelManuel' },
+  ];
+
+  // Calcul depuis D1
+  const handleD1Change = (value) => {
+    const newDates = { ...(dt.dates || {}) };
+    newDates.D1 = value;
+    if (value) {
+      if (!dt._d2Manuel)     newDates.D2     = addMonthsDT(value, 2);
+      if (!dt._d3Manuel)     newDates.D3     = addYearsDT(value, 1);
+      if (!dt._rappelManuel) newDates.Rappel = addYearsDT(value, 10);
+    }
+    setDt(p => ({ ...p, dates: newDates }));
+  };
+
+  const handleManualChange = (key, value, manualFlag) => {
+    setDt(p => ({
+      ...p,
+      dates: { ...(p.dates || {}), [key]: value },
+      [manualFlag]: true,
+    }));
+  };
+
+  // Basculer entre auto et manuel (même logique que VAR: Modifier / Verrouiller)
+  const toggleManuelDT = (key, manualFlag) => {
+    const isNowManuel = !dt[manualFlag];
+    if (!isNowManuel) {
+      // Repasser en auto: recalculer depuis D1
+      const d1 = dt.dates?.D1 || '';
+      const autoVal =
+        key === 'D2'     ? addMonthsDT(d1, 2) :
+        key === 'D3'     ? addYearsDT(d1, 1)  :
+        key === 'Rappel' ? addYearsDT(d1, 10) : '';
+      setDt(p => ({
+        ...p,
+        dates: { ...(p.dates || {}), [key]: autoVal },
+        [manualFlag]: false,
+      }));
+    } else {
+      setDt(p => ({ ...p, [manualFlag]: true }));
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Protocole DT" icon="" color="#0056ff">
+      <SectionBox title="Protocole DT (Antidiphtérique et Antitétanique)" color="#0056ff">
+
         <Field label="Schema" span={2}>
-          <RadioGroup options={PROTOCOLES.dt.schemas} value={dt.schema||'Primo-vaccination'} onChange={v => uD('schema', v)} color="#0056ff" />
+          <RadioGroup
+            options={PROTOCOLES.dt.schemas}
+            value={dt.schema || 'Primo-vaccination'}
+            onChange={v => uD('schema', v)}
+            color="#0056ff"
+          />
         </Field>
-        <Field label="Marque"><input style={inputStyle} value={dt.marque||''} onChange={e => uD('marque', e.target.value)} /></Field>
-        <Field label="N de Lot"><input style={inputStyle} value={dt.lot||''} onChange={e => uD('lot', e.target.value)} /></Field>
-        <Field label="Date de Peremption"><input style={inputStyle} type="date" value={dt.peremption||''} onChange={e => uD('peremption', e.target.value)} /></Field>
-        <Field label="Voie"><select style={selectStyle} value={dt.voie||'Intra-musculaire'} onChange={e => uD('voie', e.target.value)}>{VOIES.map(v => <option key={v}>{v}</option>)}</select></Field>
-        <Field label="Dose (ml)"><input style={inputStyle} placeholder="0.5 ml" value={dt.doseML||'0.5'} onChange={e => uD('doseML', e.target.value)} /></Field>
-        <Field label="Derniere vaccination DT"><input style={inputStyle} type="date" value={dt.derniereVaccination||''} onChange={e => uD('derniereVaccination', e.target.value)} /></Field>
+
+        <Field label="Marque / DCI">
+          <input style={inputStyle} placeholder="Ex: Td Vaccin, Revaxis..." value={dt.marque || ''} onChange={e => uD('marque', e.target.value)} />
+        </Field>
+        <Field label="N de Lot">
+          <input style={inputStyle} value={dt.lot || ''} onChange={e => uD('lot', e.target.value)} />
+        </Field>
+        <Field label="Date de Peremption">
+          <input style={inputStyle} type="date" value={dt.peremption || ''} onChange={e => uD('peremption', e.target.value)} />
+        </Field>
+        <Field label="Voie d'Administration">
+          <select style={selectStyle} value={dt.voie || 'Intra-musculaire'} onChange={e => uD('voie', e.target.value)}>
+            {VOIES.map(v => <option key={v}>{v}</option>)}
+          </select>
+        </Field>
+        <Field label="Dose (ml)">
+          <input style={inputStyle} placeholder="0.5 ml" value={dt.doseML || '0.5'} onChange={e => uD('doseML', e.target.value)} />
+        </Field>
+        <Field label="Derniere vaccination DT">
+          <input style={inputStyle} type="date" value={dt.derniereVaccination || ''} onChange={e => uD('derniereVaccination', e.target.value)} />
+        </Field>
+
         <Field label="Contexte de plaie" span={2}>
           <CheckRow checked={!!dt.plaie} onChange={v => uD('plaie', v)} label="Vaccination en contexte de plaie" />
-          {dt.plaie && <input style={{...inputStyle,marginTop:8}} placeholder="Plaie souillee, brulure..." value={dt.typePlaie||''} onChange={e => uD('typePlaie', e.target.value)} />}
+          {dt.plaie && (
+            <input
+              style={{ ...inputStyle, marginTop: 8 }}
+              placeholder="Plaie souillée, brûlure..."
+              value={dt.typePlaie || ''}
+              onChange={e => uD('typePlaie', e.target.value)}
+            />
+          )}
         </Field>
-        <Field label="Calendrier" span={2}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 4 }}>
-            {['D1','D2','D3','Rappel'].map(d => (
-              <div key={d}>
-                <label style={{...labelStyle, color:'#1d4ed8', marginBottom:4}}>{d}</label>
-                <input style={inputStyle} type="date" value={dt.dates?.[d]||''} onChange={e => uD('dates', {...dt.dates,[d]:e.target.value})} />
-              </div>
-            ))}
-          </div>
-        </Field>
-        <Field label="Medecin"><input style={inputStyle} value={dt.medecin||''} onChange={e => uD('medecin', e.target.value)} /></Field>
-        <Field label="Observations" span={2}><textarea style={textareaStyle} value={dt.observations||''} onChange={e => uD('observations', e.target.value)} /></Field>
       </SectionBox>
-      <MpviSection data={dt.mpvi||{}} onChange={mpvi => uD('mpvi', mpvi)} />
+
+      {/* ── Calendrier vaccinal DT — même design que dates VAR ── */}
+      <div style={{ border: '1px solid #eaebef', borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ background: '#ebf2ff', borderBottom: '1px solid #e0e7ff', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 800, fontSize: 12, color: '#0056ff', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+            Calendrier Vaccinal dT
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#0056ff', fontWeight: 600 }}>
+            Saisir D1 pour calculer automatiquement les dates suivantes
+          </span>
+        </div>
+
+        <div style={{ padding: '18px' }}>
+          <div style={{ marginBottom: 10, padding: '8px 12px', background: '#f0f4ff', border: '1px solid #e0e7ff', borderRadius: 8, fontSize: 11, color: '#0056ff', fontWeight: 600 }}>
+            Saisissez D1 pour calculer automatiquement les dates suivantes. Utilisez le bouton Modifier pour ajuster une date manuellement.
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10, marginTop: 4 }}>
+            {dtDoses.map(({ key, label, sublabel, isBase, manualFlag }) => {
+              const isManuel    = !isBase && !!dt[manualFlag];
+              const hasValue    = !!(dt.dates?.[key]);
+              const isAutoFilled = !isBase && !isManuel && hasValue;
+
+              return (
+                <div key={key}>
+                  {/* Entete label + bouton Modifier/Verrouiller */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <label style={{
+                      fontSize: '11px', fontWeight: 700,
+                      color: isBase ? '#1d2129' : isManuel ? '#0056ff' : isAutoFilled ? '#059669' : '#8a94a6',
+                      textTransform: 'uppercase', letterSpacing: '0.4px',
+                    }}>
+                      {label}
+                      {isBase && (
+                        <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 700, color: '#0056ff', background: '#ebf2ff', padding: '1px 5px', borderRadius: 3 }}>
+                          BASE
+                        </span>
+                      )}
+                    </label>
+
+                    {!isBase && (
+                      <button
+                        type="button"
+                        onClick={() => toggleManuelDT(key, manualFlag)}
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          border: `1px solid ${isManuel ? '#0056ff' : '#e2e8f0'}`,
+                          background: isManuel ? '#ebf2ff' : 'white',
+                          color: isManuel ? '#0056ff' : '#8a94a6',
+                          fontSize: 10, fontWeight: 700,
+                          cursor: 'pointer',
+                          transition: 'all .15s',
+                        }}
+                      >
+                        {isManuel ? 'Verrouiller' : 'Modifier'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sous-label */}
+                  <div style={{ fontSize: 10, color: '#8a94a6', marginBottom: 6 }}>{sublabel}</div>
+
+                  {/* Champ date */}
+                  <input
+                    type="date"
+                    value={dt.dates?.[key] || ''}
+                    readOnly={!isBase && !isManuel}
+                    onChange={e => {
+                      if (isBase) {
+                        handleD1Change(e.target.value);
+                      } else {
+                        handleManualChange(key, e.target.value, manualFlag);
+                      }
+                    }}
+                    style={{
+                      ...inputStyle,
+                      background: isBase
+                        ? '#f8f9fb'
+                        : isManuel
+                          ? '#fff8f0'
+                          : isAutoFilled
+                            ? '#f0fdf4'
+                            : '#f8f9fb',
+                      border: isBase
+                        ? '1.5px solid #0056ff'
+                        : isManuel
+                          ? '1.5px solid #f59e0b'
+                          : isAutoFilled
+                            ? '1px solid #bbf7d0'
+                            : '1px solid #eaebef',
+                      color: isBase ? '#1d2129' : isManuel ? '#92400e' : isAutoFilled ? '#166534' : '#9ca3af',
+                      cursor: (!isBase && !isManuel) ? 'default' : 'pointer',
+                    }}
+                  />
+
+                  {/* Indicateur statut (identique VAR) */}
+                  {!isBase && (
+                    <div style={{
+                      marginTop: 3, fontSize: 10, fontWeight: 700,
+                      color: isManuel ? '#f59e0b' : isAutoFilled ? '#059669' : '#d1d5db',
+                    }}>
+                      {isManuel ? 'Modifie manuellement' : isAutoFilled ? 'Calcule automatiquement' : 'En attente de D1'}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Medecin & observations */}
+      <SectionBox title="Informations complementaires" color="#0056ff">
+        <Field label="Medecin">
+          <input style={inputStyle} value={dt.medecin || ''} onChange={e => uD('medecin', e.target.value)} placeholder="Nom du medecin prescripteur..." />
+        </Field>
+        <Field label="Observations">
+          <textarea style={{ ...textareaStyle, minHeight: 56 }} value={dt.observations || ''} onChange={e => uD('observations', e.target.value)} />
+        </Field>
+      </SectionBox>
+
+      <MpviSection data={dt.mpvi || {}} onChange={mpvi => uD('mpvi', mpvi)} />
     </div>
   );
 }
@@ -1178,13 +1378,21 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
         : `${API_BASE}/api/vaccinations`;
       await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       
+      if (form.type === 'dt' && selectedPatient) {
+        try {
+          await downloadPDF(selectedPatient, payload, buildProto(), form.type);
+        } catch (pdfError) {
+          console.warn('Erreur lors de la generation automatique du PDF DT:', pdfError.message);
+        }
+      }
+      
       onSave();
     } finally { setSaving(false); }
   };
 
   const handleDownloadPDF = async () => {
     if (!selectedPatient) { alert('Selectionnez un patient'); return; }
-    if (form.type !== 'rage') { alert('La carte PDF est disponible uniquement pour le protocole anti-rabique.'); return; }
+    if (form.type !== 'rage' && form.type !== 'dt') { alert('La carte PDF est disponible uniquement pour les protocoles anti-rabique et DT.'); return; }
     setPdfLoading(true);
     try { await downloadPDF(selectedPatient, { ...form }, buildProto(), form.type); }
     catch(e) { alert('Erreur PDF : ' + e.message); }
@@ -1467,6 +1675,24 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                       </div>
                     </div>
                   )}
+                  {/* Resume des dates DT */}
+                  {form.type === 'dt' && Object.keys(dt.dates || {}).length > 0 && (
+                    <div style={{ marginTop: 14, borderTop: '1px solid #e0e7ff', paddingTop: 12 }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, color: '#0056ff', textTransform: 'uppercase', marginBottom: 8 }}>Calendrier DT</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
+                        {Object.entries(dt.dates).filter(([, d]) => d).map(([label, date]) => {
+                          const manualKey = label === 'D2' ? '_d2Manuel' : label === 'D3' ? '_d3Manuel' : label === 'Rappel' ? '_rappelManuel' : null;
+                          const isManuel = manualKey ? !!dt[manualKey] : false;
+                          return (
+                            <div key={label} style={{ background: isManuel ? '#fff8f0' : '#f0fdf4', border: `1px solid ${isManuel ? '#fde68a' : '#bbf7d0'}`, borderRadius: 6, padding: '6px 8px' }}>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: isManuel ? '#92400e' : '#166534', textTransform: 'uppercase' }}>{label}</div>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: '#1d2129', marginTop: 2 }}>{new Date(date).toLocaleDateString('fr-FR')}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </StepCard>
 
@@ -1552,7 +1778,7 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            {step === 3 && form.patientId && form.type === 'rage' && (
+            {step === 3 && form.patientId && (form.type === 'rage' || form.type === 'dt') && (
               <button onClick={handleDownloadPDF} disabled={pdfLoading} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 50, border: 'none', background: '#ebf2ff', color: '#0056ff', fontWeight: 700, fontSize: 12, cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.7 : 1 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>

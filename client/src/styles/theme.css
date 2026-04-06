@@ -210,6 +210,19 @@ body {
   box-shadow: var(--shadow);
 }
 
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* Stat cards */
 .stats-grid {
   display: grid;
@@ -581,6 +594,9 @@ select.form-control option { background: var(--bg-card); }
 @media (max-width: 1100px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .charts-grid { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .sig-index-header { flex-direction: column; gap: 8px; }
+  .sig-index-search { max-width: none; width: 100%; }
 }
 
 @media (max-width: 768px) {
@@ -588,6 +604,8 @@ select.form-control option { background: var(--bg-card); }
   .main-content { margin-left: 0; padding: 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .sig-index-card { padding: 18px; }
 }
 
 /* ================= LOGIN PAGE ================= */
@@ -888,21 +906,23 @@ html[data-theme='dark'] img[alt='CHU Tlemcen'] {
 /* ================= MAP STYLES ================= */
 .sig-map-wrapper {
   position: relative;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
 .sig-legend {
   position: absolute;
-  top: 16px;
+  top: auto;
+  bottom: 16px;
   right: 16px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 12px;
+  padding: 14px 16px;
   box-shadow: var(--shadow);
   z-index: 1000;
+  min-width: 176px;
 }
 
 .sig-legend-item {
@@ -946,6 +966,68 @@ html[data-theme='dark'] img[alt='CHU Tlemcen'] {
 .sig-search-wrapper {
   position: relative;
   margin-bottom: 16px;
+}
+
+.sig-index-card {
+  padding: 22px 24px 18px;
+  border-radius: var(--radius);
+}
+
+.sig-index-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sig-index-search {
+  max-width: 240px;
+  margin-bottom: 0;
+}
+
+.sig-index-list {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sig-index-item {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 6px;
+  text-align: left;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.sig-index-item:hover {
+  background: var(--bg-card2);
+}
+
+.sig-index-item.active {
+  background: rgba(0, 86, 255, 0.08);
+}
+
+.sig-index-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sig-index-code {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-card2);
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
 }
 
 .sig-search-icon {
@@ -1156,4 +1238,3 @@ html[data-theme='dark'] img[alt='CHU Tlemcen'] {
 .animate-slide-up {
   animation: slideUp 0.3s ease;
 }
-

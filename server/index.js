@@ -32,7 +32,7 @@ const upload = multer({
     if (allowed.includes(ext)) cb(null, true);
     else cb(new Error('Seuls les fichiers .xlsx et .xls sont acceptes'));
   },
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
+  limits: { fileSize: 50 * 1024 * 1024 },
 });
 
 const db = initDB();
@@ -152,7 +152,7 @@ const extractPatientIdentity = (row) => {
   };
 };
 
-// ── Lire un fichier Excel via PowerShell (chemin fixe historique) ─────────────
+// ── Lire un fichier Excel via PowerShell ──────────────────────────────────────
 function readAntirabWorkbook(workbookPath) {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(__dirname, 'import_antirab.ps1');
@@ -171,7 +171,7 @@ function readAntirabWorkbook(workbookPath) {
   });
 }
 
-// ── Lire un fichier Excel via Node.js (xlsx) — fallback cross-platform ───────
+// ── Lire un fichier Excel via Node.js (xlsx) ──────────────────────────────────
 async function readExcelWithXlsx(filePath) {
   try {
     const XLSX = require('xlsx');
@@ -263,10 +263,7 @@ function importExportedWorkbookIntoDB(workbook) {
       const prenom = normalizeText(row.prenom);
       const sexe = normalizeText(row.sexe) || 'M';
 
-      if (!nom || !prenom) {
-        result.skippedRows += 1;
-        return;
-      }
+      if (!nom || !prenom) { result.skippedRows += 1; return; }
 
       let patient = sourceId ? findPatientById.get(sourceId) : null;
       if (!patient) {
@@ -277,9 +274,7 @@ function importExportedWorkbookIntoDB(workbook) {
         let patientId = sourceId || uuidv4();
         if (sourceId && findPatientById.get(sourceId)) patientId = uuidv4();
         insertPatient.run({
-          id: patientId,
-          nom,
-          prenom,
+          id: patientId, nom, prenom,
           dateNaissance: parseExcelDate(row.dateNaissance) || normalizeText(row.dateNaissance) || null,
           age: row.age === '' || row.age === null || row.age === undefined ? null : Number.parseInt(row.age, 10) || null,
           sexe,
@@ -332,31 +327,15 @@ function importExportedWorkbookIntoDB(workbook) {
         if (found) patientId = found.id;
       }
 
-      if (!patientId || !findPatientById.get(patientId)) {
-        result.skippedRows += 1;
-        return;
-      }
-
-      if (sourceVaccinationId && findVaccinationById.get(sourceVaccinationId)) {
-        result.skippedRows += 1;
-        return;
-      }
+      if (!patientId || !findPatientById.get(patientId)) { result.skippedRows += 1; return; }
+      if (sourceVaccinationId && findVaccinationById.get(sourceVaccinationId)) { result.skippedRows += 1; return; }
 
       const type = normalizeText(row.type);
       const vaccin = normalizeText(row.vaccin);
       const dose = normalizeText(row.dose);
       const dateAdministration = parseExcelDate(row.dateAdministration) || normalizeText(row.dateAdministration) || null;
-      const existingVaccination = findVaccinationBySignature.get(
-        patientId,
-        type,
-        vaccin,
-        dateAdministration || '',
-        dose,
-      );
-      if (existingVaccination) {
-        result.skippedRows += 1;
-        return;
-      }
+      const existingVaccination = findVaccinationBySignature.get(patientId, type, vaccin, dateAdministration || '', dose);
+      if (existingVaccination) { result.skippedRows += 1; return; }
 
       let protocoleData = null;
       if (normalizeText(row.protocoleData)) {
@@ -372,11 +351,8 @@ function importExportedWorkbookIntoDB(workbook) {
       let vaccinationId = sourceVaccinationId || uuidv4();
       if (sourceVaccinationId && findVaccinationById.get(sourceVaccinationId)) vaccinationId = uuidv4();
       insertVaccination.run({
-        id: vaccinationId,
-        patientId,
-        type: type || null,
-        vaccin: vaccin || null,
-        dose: dose || null,
+        id: vaccinationId, patientId,
+        type: type || null, vaccin: vaccin || null, dose: dose || null,
         statut: normalizeText(row.statut) || 'complete',
         dateAdministration,
         dateProchaineDose: parseExcelDate(row.dateProchaineDose) || normalizeText(row.dateProchaineDose) || null,
@@ -428,7 +404,6 @@ function importRowsIntoDB(rows) {
   const importTransaction = db.transaction((items) => {
     items.forEach((row) => {
       const { nom, prenom } = extractPatientIdentity(row);
-
       if (!nom || !prenom) { result.skippedRows += 1; return; }
 
       const sexe = normalizeKey(pickRowValue(row, ['SEXE'])).startsWith('f') ? 'F' : 'M';
@@ -448,8 +423,7 @@ function importRowsIntoDB(rows) {
           wilaya:  normalizeText(pickRowValue(row, ['WILAYA']))  || null,
           daira:   normalizeText(pickRowValue(row, ['DAIRA']))   || null,
           commune: normalizeText(pickRowValue(row, ['COMMUNE'])) || null,
-          adressePrecise: null,
-          groupeSanguin: 'A+',
+          adressePrecise: null, groupeSanguin: 'A+',
           poids:      normalizeText(pickRowValue(row, ['POID','POIDS'])) || '',
           fonction:   normalizeText(pickRowValue(row, ['FONCTION']))     || null,
           service:    normalizeText(pickRowValue(row, ['SERVICE']))      || null,
@@ -482,12 +456,10 @@ function importRowsIntoDB(rows) {
         animalVaccine: /oui|vaccine|vaccin/i.test(vaccAnimalText) ? true : /non|inconnu/i.test(vaccAnimalText) ? false : null,
         localisationPlaies:   normalizeText(pickRowValue(row, ['SIEGE'])) || null,
         circonstancesMorsure: normalizeText(pickRowValue(row, ['NATULESI'])) || null,
-        // III.1 Soins locaux
         soinsLocaux:    /oui|1|true/i.test(normalizeText(pickRowValue(row, ['SOINS','SOINSLOCAUX','SOINSLOCAU']))) || false,
         lavageEau:      /oui|1|true/i.test(normalizeText(pickRowValue(row, ['LAVEAU','LAVAGEEAU'])))  || false,
         lavageEauSavon: /oui|1|true/i.test(normalizeText(pickRowValue(row, ['LAVEAUSAVON'])))          || false,
         applicationProduit: normalizeText(pickRowValue(row, ['PRODUIT','ANTISEPTIQUE'])) || null,
-        // III.2 ERIG
         erig:           /oui|1|true/i.test(normalizeText(pickRowValue(row, ['ERIG']))),
         erigLot:        normalizeText(pickRowValue(row, ['LOTERIG']))              || null,
         erigPeremption: parseExcelDate(pickRowValue(row, ['DPÉERIG','DPERIG'])),
@@ -495,17 +467,14 @@ function importRowsIntoDB(rows) {
         erigQuantiteIM:     normalizeText(pickRowValue(row, ['ERIGINJ','QIMERIG']))            || null,
         erigBesredka:   normalizeText(pickRowValue(row, ['BESREDKA'])) || 'non',
         erigDilution:   /oui|1|true/i.test(normalizeText(pickRowValue(row, ['DILLUT','DILUTIONERIG']))) || false,
-        // III.3 Chirurgie
         chirurgie:         normalizeText(pickRowValue(row, ['INTERVCH','CHIRURGIE'])) || 'non',
         chirurgieDate:     parseExcelDate(pickRowValue(row, ['DATINTER','DATCHIR'])),
         chirurgieHopital:  normalizeText(pickRowValue(row, ['HOPITAL'])) || null,
         chirurgieService:  normalizeText(pickRowValue(row, ['SERVICE2'])) || null,
-        // III.4 Suture
         suture:       /oui|1|true/i.test(sutureVal),
         sutureDetail: sutureMoment ? (
           /avant/i.test(sutureMoment) ? "Avant l'infiltration d'ERIG" : "Apres l'infiltration d'ERIG"
         ) : '',
-        // III.5 VAR
         varType:      normalizeText(pickRowValue(row, ['TYPVAC']))   || null,
         varDCI:       normalizeText(pickRowValue(row, ['DCI']))      || null,
         varLot:       normalizeText(pickRowValue(row, ['LOTVAR']))   || null,
@@ -545,11 +514,7 @@ app.get('/api/patients', (req, res) => {
     const clauses = [];
     const params = [];
 
-    if (year) {
-      clauses.push("substr(createdAt,1,4) = ?");
-      params.push(String(year));
-    }
-
+    if (year) { clauses.push("substr(createdAt,1,4) = ?"); params.push(String(year)); }
     if (search) {
       const s = `%${search.toLowerCase()}%`;
       clauses.push("(lower(nom) LIKE ? OR lower(prenom) LIKE ? OR lower(email) LIKE ?)");
@@ -594,87 +559,23 @@ app.get('/api/export/patients', (req, res) => {
     ];
 
     const patientVaccinationRows = patients.flatMap((patient) => {
-      const patientVaccinations = vaccinations.filter((vaccination) => vaccination.patientId === patient.id);
+      const patientVaccinations = vaccinations.filter((v) => v.patientId === patient.id);
       if (patientVaccinations.length === 0) {
-        return [{
-          patientId: patient.id,
-          nom: patient.nom || '',
-          prenom: patient.prenom || '',
-          dateNaissance: patient.dateNaissance || '',
-          age: patient.age ?? '',
-          sexe: patient.sexe || '',
-          telephone: patient.telephone || '',
-          commune: patient.commune || '',
-          wilaya: patient.wilaya || '',
-          typeVaccin: '',
-          vaccin: '',
-          dose: '',
-          statut: '',
-          dateAdministration: '',
-          dateProchaineDose: '',
-          grade: '',
-          schema: '',
-        }];
+        return [{ patientId: patient.id, nom: patient.nom||'', prenom: patient.prenom||'', dateNaissance: patient.dateNaissance||'', age: patient.age??'', sexe: patient.sexe||'', telephone: patient.telephone||'', commune: patient.commune||'', wilaya: patient.wilaya||'', typeVaccin: '', vaccin: '', dose: '', statut: '', dateAdministration: '', dateProchaineDose: '', grade: '', schema: '' }];
       }
-
-      return patientVaccinations.map((vaccination) => ({
-        patientId: patient.id,
-        nom: patient.nom || '',
-        prenom: patient.prenom || '',
-        dateNaissance: patient.dateNaissance || '',
-        age: patient.age ?? '',
-        sexe: patient.sexe || '',
-        telephone: patient.telephone || '',
-        commune: patient.commune || '',
-        wilaya: patient.wilaya || '',
-        typeVaccin: vaccination.type || '',
-        vaccin: vaccination.vaccin || '',
-        dose: vaccination.dose || '',
-        statut: vaccination.statut || '',
-        dateAdministration: vaccination.dateAdministration || '',
-        dateProchaineDose: vaccination.dateProchaineDose || '',
-        grade: vaccination.protocoleData?.grade || '',
-        schema: vaccination.protocoleData?.schema || '',
+      return patientVaccinations.map((v) => ({
+        patientId: patient.id, nom: patient.nom||'', prenom: patient.prenom||'', dateNaissance: patient.dateNaissance||'', age: patient.age??'', sexe: patient.sexe||'', telephone: patient.telephone||'', commune: patient.commune||'', wilaya: patient.wilaya||'',
+        typeVaccin: v.type||'', vaccin: v.vaccin||'', dose: v.dose||'', statut: v.statut||'', dateAdministration: v.dateAdministration||'', dateProchaineDose: v.dateProchaineDose||'', grade: v.protocoleData?.grade||'', schema: v.protocoleData?.schema||'',
       }));
     });
 
-    const patientRows = patients.map((patient) => {
-      const patientVaccinations = vaccinations.filter((vaccination) => vaccination.patientId === patient.id);
-      return {
-        id: patient.id,
-        nom: patient.nom || '',
-        prenom: patient.prenom || '',
-        dateNaissance: patient.dateNaissance || '',
-        age: patient.age ?? '',
-        sexe: patient.sexe || '',
-        telephone: patient.telephone || '',
-        adresse: patient.adresse || '',
-        adressePrecise: patient.adressePrecise || '',
-        commune: patient.commune || '',
-        daira: patient.daira || '',
-        wilaya: patient.wilaya || '',
-        profession: patient.profession || '',
-        fonction: patient.fonction || '',
-        groupeSanguin: patient.groupeSanguin || '',
-        createdAt: patient.createdAt || '',
-        vaccinationsCount: patientVaccinations.length,
-      };
-    });
+    const patientRows = patients.map((patient) => ({
+      id: patient.id, nom: patient.nom||'', prenom: patient.prenom||'', dateNaissance: patient.dateNaissance||'', age: patient.age??'', sexe: patient.sexe||'', telephone: patient.telephone||'', adresse: patient.adresse||'', adressePrecise: patient.adressePrecise||'', commune: patient.commune||'', daira: patient.daira||'', wilaya: patient.wilaya||'', profession: patient.profession||'', fonction: patient.fonction||'', groupeSanguin: patient.groupeSanguin||'', createdAt: patient.createdAt||'',
+      vaccinationsCount: vaccinations.filter((v) => v.patientId === patient.id).length,
+    }));
 
-    const vaccinationRows = vaccinations.map((vaccination) => ({
-      id: vaccination.id,
-      patientId: vaccination.patientId || '',
-      patient: vaccination.patient || patientNames[vaccination.patientId] || '',
-      type: vaccination.type || '',
-      vaccin: vaccination.vaccin || '',
-      dose: vaccination.dose || '',
-      statut: vaccination.statut || '',
-      dateAdministration: vaccination.dateAdministration || '',
-      dateProchaineDose: vaccination.dateProchaineDose || '',
-      grade: vaccination.protocoleData?.grade || '',
-      schema: vaccination.protocoleData?.schema || '',
-      protocoleData: vaccination.protocoleData ? JSON.stringify(vaccination.protocoleData) : '',
-      createdAt: vaccination.createdAt || '',
+    const vaccinationRows = vaccinations.map((v) => ({
+      id: v.id, patientId: v.patientId||'', patient: v.patient || patientNames[v.patientId]||'', type: v.type||'', vaccin: v.vaccin||'', dose: v.dose||'', statut: v.statut||'', dateAdministration: v.dateAdministration||'', dateProchaineDose: v.dateProchaineDose||'', grade: v.protocoleData?.grade||'', schema: v.protocoleData?.schema||'', protocoleData: v.protocoleData ? JSON.stringify(v.protocoleData) : '', createdAt: v.createdAt||'',
     }));
 
     const workbook = XLSX.utils.book_new();
@@ -685,14 +586,9 @@ app.get('/api/export/patients', (req, res) => {
 
     const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
     const filename = `vaccitrack_export_patients_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-    });
+    res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition': `attachment; filename="${filename}"` });
     res.send(buffer);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/patients', (req, res) => {
@@ -710,12 +606,12 @@ app.post('/api/patients', (req, res) => {
          @antecedents,@allergies,@maladiesChroniques,@traitementEnCours,@contreIndications,
          @fumeur,@alcool,@activitePhysique,@mutuelle,@numeroCNAS,@medecinTraitant,@notesClinicien,@createdAt)
     `).run({
-      id:p.id, nom:p.nom, prenom:p.prenom, dateNaissance:p.dateNaissance||null, age:Number.isFinite(Number(p.age)) ? Number(p.age) : null,
-      sexe:p.sexe||'M', telephone:p.telephone||null, email:p.email||null,
-      adresse:p.adresse||null, wilaya:p.wilaya||null, daira:p.daira||null,
-      commune:p.commune||null, adressePrecise:p.adressePrecise||null,
-      groupeSanguin:p.groupeSanguin||'A+', poids:String(p.poids||''),
-      fonction:p.fonction||null, service:p.service||null,
+      id:p.id, nom:p.nom, prenom:p.prenom, dateNaissance:p.dateNaissance||null,
+      age:Number.isFinite(Number(p.age)) ? Number(p.age) : null, sexe:p.sexe||'M',
+      telephone:p.telephone||null, email:p.email||null, adresse:p.adresse||null,
+      wilaya:p.wilaya||null, daira:p.daira||null, commune:p.commune||null,
+      adressePrecise:p.adressePrecise||null, groupeSanguin:p.groupeSanguin||'A+',
+      poids:String(p.poids||''), fonction:p.fonction||null, service:p.service||null,
       profession:p.profession||null, instruction:p.instruction||null,
       antecedents:p.antecedents||null, allergies:p.allergies||null,
       maladiesChroniques:p.maladiesChroniques||null, traitementEnCours:p.traitementEnCours||null,
@@ -780,15 +676,8 @@ app.get('/api/vaccinations', (req, res) => {
     const clauses = [];
     const params = [];
 
-    if (patientId && all !== '1') {
-      clauses.push('v.patientId=?');
-      params.push(patientId);
-    }
-
-    if (year) {
-      clauses.push("substr(v.dateAdministration,1,4) = ?");
-      params.push(String(year));
-    }
+    if (patientId && all !== '1') { clauses.push('v.patientId=?'); params.push(patientId); }
+    if (year) { clauses.push("substr(v.dateAdministration,1,4) = ?"); params.push(String(year)); }
 
     const whereSql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
     const rows = db.prepare(`${join}${whereSql} ORDER BY v.dateAdministration DESC`).all(...params);
@@ -813,10 +702,7 @@ app.post('/api/vaccinations', (req, res) => {
     const match = db.prepare(`SELECT * FROM stocks WHERE lower(vaccin) LIKE ? AND quantiteRestante > 0 LIMIT 1`).get(`%${(v.vaccin||'').split(' ')[0].toLowerCase()}%`);
     if (match) {
       db.prepare('UPDATE stocks SET quantiteRestante = quantiteRestante - 1 WHERE id=?').run(match.id);
-      db.prepare(`
-        INSERT INTO stock_movements (id, stockId, type, quantite, patientId, motif, createdAt)
-        VALUES (?, ?, 'SORTIE', 1, ?, ?, ?)
-      `).run(uuidv4(), match.id, v.patientId, `Vaccination: ${v.vaccin || v.type || 'Vaccin'}`, new Date().toISOString());
+      db.prepare(`INSERT INTO stock_movements (id, stockId, type, quantite, patientId, motif, createdAt) VALUES (?, ?, 'SORTIE', 1, ?, ?, ?)`).run(uuidv4(), match.id, v.patientId, `Vaccination: ${v.vaccin || v.type || 'Vaccin'}`, new Date().toISOString());
     }
     res.status(201).json(hydrateVacc(db.prepare('SELECT * FROM vaccinations WHERE id=?').get(v.id)));
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -888,8 +774,7 @@ app.get('/api/stocks/movements', (req, res) => {
       FROM stock_movements m
       JOIN stocks s ON m.stockId = s.id
       LEFT JOIN patients p ON m.patientId = p.id
-      ORDER BY m.createdAt DESC
-      LIMIT 100
+      ORDER BY m.createdAt DESC LIMIT 100
     `).all();
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -904,10 +789,7 @@ app.post('/api/stocks', (req, res) => {
       quantiteRestante:Number(s.quantiteRestante)||0,
       datePeremption:s.datePeremption||null,
     });
-    db.prepare(`
-      INSERT INTO stock_movements (id, stockId, type, quantite, motif, createdAt)
-      VALUES (?, ?, 'ENTREE', ?, ?, ?)
-    `).run(uuidv4(), s.id, Number(s.quantiteInitiale) || 0, 'Reception initiale de lot', new Date().toISOString());
+    db.prepare(`INSERT INTO stock_movements (id, stockId, type, quantite, motif, createdAt) VALUES (?, ?, 'ENTREE', ?, ?, ?)`).run(uuidv4(), s.id, Number(s.quantiteInitiale) || 0, 'Reception initiale de lot', new Date().toISOString());
     res.status(201).json(s);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -989,11 +871,11 @@ app.get('/api/stats', (req, res) => {
 
     const today = new Date().toISOString().slice(0, 10);
     const in30  = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-    const rappelsProchains      = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose >= ? AND dateProchaineDose <= ?`).get(today, in30).n;
-    const vaccinationsEnRetard  = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose < ? AND statut != 'complete'`).get(today).n;
-    const stocks                = db.prepare('SELECT * FROM stocks').all();
-    const stocksCritiques       = stocks.filter(s => s.quantiteInitiale > 0 && (s.quantiteRestante / s.quantiteInitiale) <= 0.2).length;
-    const stocksPerimes         = stocks.filter(s => s.datePeremption && new Date(s.datePeremption) < new Date()).length;
+    const rappelsProchains     = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose >= ? AND dateProchaineDose <= ?`).get(today, in30).n;
+    const vaccinationsEnRetard = db.prepare(`SELECT COUNT(*) as n FROM vaccinations WHERE dateProchaineDose IS NOT NULL AND dateProchaineDose < ? AND statut != 'complete'`).get(today).n;
+    const stocks               = db.prepare('SELECT * FROM stocks').all();
+    const stocksCritiques      = stocks.filter(s => s.quantiteInitiale > 0 && (s.quantiteRestante / s.quantiteInitiale) <= 0.2).length;
+    const stocksPerimes        = stocks.filter(s => s.datePeremption && new Date(s.datePeremption) < new Date()).length;
 
     res.json({
       totalPatients, totalVaccinations, rappelsProchains, vaccinationsEnRetard,
@@ -1007,7 +889,7 @@ app.get('/api/stats', (req, res) => {
   }
 });
 
-// ── IMPORT ANTIRAB — chemin fixe (ancien) ────────────────────────────────────
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
 app.get('/api/settings', (req, res) => {
   try {
     const row = db.prepare('SELECT * FROM app_settings WHERE id = ?').get('default');
@@ -1022,8 +904,7 @@ app.put('/api/settings', (req, res) => {
       INSERT INTO app_settings (id, langue, theme, notificationsEmail, notificationsPush, affichageRappels, updatedAt)
       VALUES ('default', @langue, @theme, @notificationsEmail, @notificationsPush, @affichageRappels, @updatedAt)
       ON CONFLICT(id) DO UPDATE SET
-        langue = excluded.langue,
-        theme = excluded.theme,
+        langue = excluded.langue, theme = excluded.theme,
         notificationsEmail = excluded.notificationsEmail,
         notificationsPush = excluded.notificationsPush,
         affichageRappels = excluded.affichageRappels,
@@ -1039,6 +920,7 @@ app.put('/api/settings', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ── SUPPORT TICKETS ───────────────────────────────────────────────────────────
 app.get('/api/support/tickets', (req, res) => {
   try { res.json(db.prepare('SELECT * FROM support_tickets ORDER BY createdAt DESC').all()); }
   catch (err) { res.status(500).json({ error: err.message }); }
@@ -1054,7 +936,7 @@ app.get('/api/support-tickets', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/support/tickets', (req, res) => {
+const createTicket = (req, res) => {
   try {
     const now = new Date().toISOString();
     const ticket = {
@@ -1070,37 +952,13 @@ app.post('/api/support/tickets', (req, res) => {
     if (!ticket.titre || !ticket.description) {
       return res.status(400).json({ error: 'Titre et description requis.' });
     }
-    db.prepare(`
-      INSERT INTO support_tickets (id, titre, description, categorie, priorite, statut, createdAt, updatedAt)
-      VALUES (@id, @titre, @description, @categorie, @priorite, @statut, @createdAt, @updatedAt)
-    `).run(ticket);
+    db.prepare(`INSERT INTO support_tickets (id, titre, description, categorie, priorite, statut, createdAt, updatedAt) VALUES (@id, @titre, @description, @categorie, @priorite, @statut, @createdAt, @updatedAt)`).run(ticket);
     res.status(201).json(ticket);
   } catch (err) { res.status(500).json({ error: err.message }); }
-});
+};
 
-app.post('/api/support-tickets', (req, res) => {
-  try {
-    const now = new Date().toISOString();
-    const ticket = {
-      id: uuidv4(),
-      titre: normalizeText(req.body?.titre),
-      description: normalizeText(req.body?.description),
-      categorie: normalizeText(req.body?.categorie) || 'Question',
-      priorite: normalizeText(req.body?.priorite) || 'normal',
-      statut: 'ouvert',
-      createdAt: now,
-      updatedAt: now,
-    };
-    if (!ticket.titre || !ticket.description) {
-      return res.status(400).json({ error: 'Titre et description requis.' });
-    }
-    db.prepare(`
-      INSERT INTO support_tickets (id, titre, description, categorie, priorite, statut, createdAt, updatedAt)
-      VALUES (@id, @titre, @description, @categorie, @priorite, @statut, @createdAt, @updatedAt)
-    `).run(ticket);
-    res.status(201).json(ticket);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+app.post('/api/support/tickets', createTicket);
+app.post('/api/support-tickets', createTicket);
 
 app.put('/api/support-tickets/:id', (req, res) => {
   try {
@@ -1111,15 +969,13 @@ app.put('/api/support-tickets/:id', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/help/articles', (req, res) => {
+// ── HELP ARTICLES ─────────────────────────────────────────────────────────────
+const getHelpArticles = (req, res) => {
   try {
     const { search = '', categorie = '' } = req.query;
     const clauses = [];
     const params = [];
-    if (categorie) {
-      clauses.push('categorie = ?');
-      params.push(categorie);
-    }
+    if (categorie) { clauses.push('categorie = ?'); params.push(categorie); }
     if (search) {
       const s = `%${String(search).toLowerCase()}%`;
       clauses.push('(lower(titre) LIKE ? OR lower(contenu) LIKE ? OR lower(categorie) LIKE ?)');
@@ -1129,52 +985,24 @@ app.get('/api/help/articles', (req, res) => {
     const rows = db.prepare(`SELECT * FROM help_articles${whereSql} ORDER BY createdAt DESC, titre ASC`).all(...params);
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
-});
+};
 
-app.get('/api/help-articles', (req, res) => {
-  try {
-    const { search = '', categorie = '' } = req.query;
-    const clauses = [];
-    const params = [];
-    if (search) {
-      const s = `%${String(search).toLowerCase()}%`;
-      clauses.push('(lower(titre) LIKE ? OR lower(contenu) LIKE ?)');
-      params.push(s, s);
-    }
-    if (categorie) {
-      clauses.push('categorie = ?');
-      params.push(categorie);
-    }
-    const whereSql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
-    const rows = db.prepare(`SELECT * FROM help_articles${whereSql} ORDER BY createdAt DESC`).all(...params);
-    res.json(rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+app.get('/api/help/articles', getHelpArticles);
+app.get('/api/help-articles', getHelpArticles);
 
-app.post('/api/help/articles/:id/feedback', (req, res) => {
+const postHelpFeedback = (req, res) => {
   try {
     const article = db.prepare('SELECT id FROM help_articles WHERE id = ?').get(req.params.id);
     if (!article) return res.status(404).json({ error: 'Article introuvable.' });
-    db.prepare(`
-      INSERT INTO help_feedback (id, articleId, feedbackType, createdAt)
-      VALUES (?, ?, ?, ?)
-    `).run(uuidv4(), req.params.id, normalizeText(req.body?.type) || 'useful', new Date().toISOString());
+    db.prepare(`INSERT INTO help_feedback (id, articleId, feedbackType, createdAt) VALUES (?, ?, ?, ?)`).run(uuidv4(), req.params.id, normalizeText(req.body?.type) || 'useful', new Date().toISOString());
     res.status(201).json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
-});
+};
 
-app.post('/api/help-articles/:id/feedback', (req, res) => {
-  try {
-    const article = db.prepare('SELECT id FROM help_articles WHERE id = ?').get(req.params.id);
-    if (!article) return res.status(404).json({ error: 'Article introuvable.' });
-    db.prepare(`
-      INSERT INTO help_feedback (id, articleId, feedbackType, createdAt)
-      VALUES (?, ?, ?, ?)
-    `).run(uuidv4(), req.params.id, normalizeText(req.body?.type) || 'useful', new Date().toISOString());
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+app.post('/api/help/articles/:id/feedback', postHelpFeedback);
+app.post('/api/help-articles/:id/feedback', postHelpFeedback);
 
+// ── MAP ───────────────────────────────────────────────────────────────────────
 app.get('/api/map/communes', (req, res) => {
   try {
     const rows = db.prepare(`
@@ -1191,6 +1019,7 @@ app.get('/api/map/communes', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ── IMPORT ANTIRAB ────────────────────────────────────────────────────────────
 app.post('/api/import-antirab', async (req, res) => {
   try {
     const workbookPath = path.join(__dirname, 'ANTIRAB base de donnée.xlsx');
@@ -1206,7 +1035,6 @@ app.post('/api/import-antirab', async (req, res) => {
   }
 });
 
-// ── IMPORT ANTIRAB — upload fichier (NOUVEAU) ─────────────────────────────────
 app.post('/api/import-antirab-upload', upload.single('file'), async (req, res) => {
   const filePath = req.file?.path;
   try {
@@ -1219,13 +1047,11 @@ app.post('/api/import-antirab-upload', upload.single('file'), async (req, res) =
       result = importExportedWorkbookIntoDB(workbook);
     } else {
       let rows;
-      // Tenter d'abord PowerShell (Windows), sinon fallback xlsx Node
       try { rows = await readAntirabWorkbook(filePath); }
       catch (psErr) {
         console.log(`PowerShell non disponible (${psErr.message}), utilisation de xlsx...`);
         rows = await readExcelWithXlsx(filePath);
       }
-
       if (!rows || rows.length === 0) return res.status(400).json({ error: 'Le fichier est vide ou illisible.' });
       result = importRowsIntoDB(rows);
     }
@@ -1236,7 +1062,6 @@ app.post('/api/import-antirab-upload', upload.single('file'), async (req, res) =
     console.error('❌ Import upload error:', err.message);
     res.status(500).json({ error: err.message });
   } finally {
-    // Supprimer le fichier temporaire
     if (filePath && fs.existsSync(filePath)) {
       try { fs.unlinkSync(filePath); } catch {}
     }
@@ -1255,7 +1080,7 @@ app.post('/api/auth/login', (req, res) => {
     : res.status(401).json({ error: 'Identifiants invalides' });
 });
 
-// ── PDF ───────────────────────────────────────────────────────────────────────
+// ── PDF — Helpers ─────────────────────────────────────────────────────────────
 const calcAge = (value) => {
   if (!value) return '';
   try {
@@ -1268,6 +1093,7 @@ const calcAge = (value) => {
     return String(age);
   } catch { return ''; }
 };
+
 const fmtDate = (value) => {
   if (!value) return '';
   try {
@@ -1278,124 +1104,174 @@ const fmtDate = (value) => {
   } catch { return String(value); }
 };
 
+// ── Nettoyer emojis et caractères non-PDF ─────────────────────────────────────
+const cleanText = (text) => {
+  if (!text) return '';
+  return String(text)
+    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
+    .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
+    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')
+    .trim();
+};
+
+// ── Coordonnées Ordonnance ────────────────────────────────────────────────────
 const COORDS_ORDONNANCE = {
   date:          { x: 460, y: 636, size: 9 },
   nomPatient:    { x: 400, y: 619, size: 10 },
   dateNaissance: { x: 210, y: 603, size: 9 },
   nImmat:        { x: 395, y: 583, size: 9 },
   rx: [
-    { x: 30, y: 544, size: 10 },
-    { x: 30, y: 525, size: 10 },
-    { x: 30, y: 506, size: 10 },
-    { x: 30, y: 487, size: 10 },
-    { x: 30, y: 468, size: 10 },
-    { x: 30, y: 449, size: 10 },
+    { x: 30, y: 544, size: 10 }, { x: 30, y: 525, size: 10 },
+    { x: 30, y: 506, size: 10 }, { x: 30, y: 487, size: 10 },
+    { x: 30, y: 468, size: 10 }, { x: 30, y: 449, size: 10 },
   ],
-  obs: [
-    { x: 30, y: 420, size: 9 },
-    { x: 30, y: 409, size: 9 },
-  ],
+  obs: [{ x: 30, y: 420, size: 9 }, { x: 30, y: 409, size: 9 }],
   medecin: { x: 30, y: 103, size: 9 },
 };
 
-const COORDS_DT_P1 = {
+// ── Coordonnées DT — VERSION 1 (carte_vaccination_DT.pdf) ────────────────────
+// Conservées comme fallback / référence
+const COORDS_DT_P1_V1 = {
   nom:      { x: 220, y: 412, size: 11 },
   prenom:   { x: 250, y: 381, size: 11 },
   age:      { x: 150, y: 338, size: 11 },
   adresse:  { x: 280, y: 304, size: 10 },
   fonction: { x: 290, y: 268, size: 10 },
 };
-
-const COORDS_DT_P2 = {
+const COORDS_DT_P2_V1 = {
   dose1:   { x: 350, y: 592, size: 10 },
   dose2m:  { x: 370, y: 532, size: 10 },
   dose1an: { x: 365, y: 470, size: 10 },
   dose10:  { x: 395, y: 410, size: 10 },
-  medecin: { x: 640, y: 290, size: 9 },
+  medecin: { x: 640, y: 290, size: 9  },
 };
 
+// ── Coordonnées DT — VERSION 2 calibrée (carte_de_vaccination_dt.pdf) ────────
+// A4 paysage, pdf-lib origine bas-gauche
+const DT_COORDS = {
+  p1: {
+    nom:      { x: 55,  y: 95.0,  size: 10, maxW: 230 },
+    prenom:   { x: 70,  y: 78.0,  size: 10, maxW: 220 },
+    age:      { x: 48,  y: 62.0,  size: 10, maxW: 100 },
+    adresse:  { x: 68,  y: 44.5,  size:  9, maxW: 220 },
+    fonction: { x: 73,  y: 29.5,  size: 10, maxW: 215 },
+  },
+  p2: {
+    dose1:    { x: 112, y: 163.0, size: 10, maxW: 180 },
+    dose2m:   { x: 132, y: 133.0, size: 10, maxW: 165 },
+    dose1an:  { x: 128, y: 103.5, size: 10, maxW: 170 },
+    dose10:   { x: 140, y:  70.5, size: 10, maxW: 155 },
+    medecin:  { x: 217, y:  26.0, size:  9, maxW:  70 },
+  },
+};
+
+// ── Utilitaires dates DT ──────────────────────────────────────────────────────
+const addMonthsDT = (isoDate, months) => {
+  try { const d = new Date(isoDate); d.setMonth(d.getMonth() + months); return d.toISOString().slice(0, 10); }
+  catch { return ''; }
+};
+const addYearsDT = (isoDate, years) => {
+  try { const d = new Date(isoDate); d.setFullYear(d.getFullYear() + years); return d.toISOString().slice(0, 10); }
+  catch { return ''; }
+};
+
+// ── buildDtPdf — utilise DT_COORDS (carte_de_vaccination_dt.pdf) ─────────────
 async function buildDtPdf(payload) {
-  const templatePath = path.join(__dirname, 'carte_vaccination_DT.pdf');
+  console.log('🔍 DT PDF - Payload reçu:', JSON.stringify(payload, null, 2));
+  const templatePath = path.join(__dirname, 'carte_de_vaccination_dt.pdf');
   const pdfDoc = await PDFDocument.load(fs.readFileSync(templatePath));
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const pages = pdfDoc.getPages();
-  const p1 = pages[0];
-  const p2 = pages[1];
+  const p1    = pages[0];
+  const p2    = pages[1];
 
-  const patient = payload.patient || {};
-  const vacc = payload.vaccination || {};
-  const proto = payload.protocoleData || {};
+  const patient = payload.patient     || {};
+  const vacc    = payload.vaccination  || {};
+  const proto   = payload.protocoleData || {};
 
-  const draw = (pg, text, x, y, size = 10, isBold = false, maxWidth = 350) => {
+  // Fonction dessin avec nettoyage automatique
+  const draw = (pg, text, coord, isBold = false) => {
     if (!pg || !text) return;
-    let t = String(text);
+    let t = cleanText(String(text));
     const f = isBold ? bold : font;
-    while (t.length > 1 && f.widthOfTextAtSize(t, size) > maxWidth) {
-      t = t.slice(0, -1);
+    if (coord.maxW) {
+      while (t.length > 1 && f.widthOfTextAtSize(t, coord.size) > coord.maxW) t = t.slice(0, -1);
     }
-    pg.drawText(t, { x, y, size, font: f, color: rgb(0, 0, 0) });
+    pg.drawText(t, { x: coord.x, y: coord.y, size: coord.size, font: f, color: rgb(0, 0, 0) });
   };
 
-  draw(p1, patient.nom || '', COORDS_DT_P1.nom.x, COORDS_DT_P1.nom.y, COORDS_DT_P1.nom.size, false, 300);
-  draw(p1, patient.prenom || '', COORDS_DT_P1.prenom.x, COORDS_DT_P1.prenom.y, COORDS_DT_P1.prenom.size, false, 300);
+  // Calcul des dates DT
+  const dtDates   = proto.dates || {};
+  const d1Raw     = dtDates.D1 || vacc.dateAdministration || '';
+  const d2        = dtDates.D2     || (d1Raw ? addMonthsDT(d1Raw, 2)  : '');
+  const d3        = dtDates.D3     || dtDates.Rappel || (d1Raw ? addYearsDT(d1Raw, 1)  : '');
+  const rappel10  = dtDates.Rappel10 || dtDates['Rappel (10 ans)'] || dtDates['Rappel'] || (d1Raw ? addYearsDT(d1Raw, 10) : '');
+
+  console.log('🔍 DT PDF - Dates calculées:', { d1Raw, d2, d3, rappel10 });
+
+  // PAGE 1 : Identité patient
+  draw(p1, patient.nom    || '', DT_COORDS.p1.nom);
+  draw(p1, patient.prenom || '', DT_COORDS.p1.prenom);
 
   const ageStr = patient.dateNaissance
     ? `${calcAge(patient.dateNaissance)} ans`
     : (patient.age ? `${patient.age} ans` : '');
-  draw(p1, ageStr, COORDS_DT_P1.age.x, COORDS_DT_P1.age.y, COORDS_DT_P1.age.size, false, 100);
+  draw(p1, ageStr, DT_COORDS.p1.age);
 
-  const adresse = [patient.adressePrecise, patient.adresse, patient.commune, patient.wilaya]
-    .filter(Boolean).join(', ');
-  draw(p1, adresse, COORDS_DT_P1.adresse.x, COORDS_DT_P1.adresse.y, COORDS_DT_P1.adresse.size, false, 310);
-  draw(p1, patient.fonction || patient.profession || '', COORDS_DT_P1.fonction.x, COORDS_DT_P1.fonction.y, COORDS_DT_P1.fonction.size, false, 300);
+  const adresse = [patient.adressePrecise, patient.adresse, patient.commune, patient.wilaya].filter(Boolean).join(', ');
+  draw(p1, adresse, DT_COORDS.p1.adresse);
+  draw(p1, patient.fonction || patient.profession || '', DT_COORDS.p1.fonction);
 
-  const dtDates = proto.dates || {};
-  const d1 = dtDates.D1 || vacc.dateAdministration || '';
-  draw(p2, fmtDate(d1), COORDS_DT_P2.dose1.x, COORDS_DT_P2.dose1.y, COORDS_DT_P2.dose1.size);
-  draw(p2, fmtDate(dtDates.D2 || ''), COORDS_DT_P2.dose2m.x, COORDS_DT_P2.dose2m.y, COORDS_DT_P2.dose2m.size);
-  draw(p2, fmtDate(dtDates.D3 || dtDates.Rappel || ''), COORDS_DT_P2.dose1an.x, COORDS_DT_P2.dose1an.y, COORDS_DT_P2.dose1an.size);
-
-  let rappelDecennal = dtDates.Rappel10 || '';
-  if (!rappelDecennal && d1) {
-    try {
-      const d = new Date(d1);
-      d.setFullYear(d.getFullYear() + 10);
-      rappelDecennal = d.toISOString().slice(0, 10);
-    } catch {}
-  }
-  draw(p2, fmtDate(rappelDecennal), COORDS_DT_P2.dose10.x, COORDS_DT_P2.dose10.y, COORDS_DT_P2.dose10.size);
+  // PAGE 2 : Calendrier vaccinal
+  draw(p2, fmtDate(d1Raw),    DT_COORDS.p2.dose1);
+  draw(p2, fmtDate(d2),       DT_COORDS.p2.dose2m);
+  draw(p2, fmtDate(d3),       DT_COORDS.p2.dose1an);
+  draw(p2, fmtDate(rappel10), DT_COORDS.p2.dose10);
 
   const medecinDT = proto.medecin || vacc.medecin || '';
-  draw(p2, medecinDT ? `Dr. ${medecinDT}` : '', COORDS_DT_P2.medecin.x, COORDS_DT_P2.medecin.y, COORDS_DT_P2.medecin.size, true, 150);
+  if (medecinDT) {
+    const medecinLabel = /^Dr\.?/i.test(medecinDT) ? medecinDT : `Dr. ${medecinDT}`;
+    draw(p2, medecinLabel, DT_COORDS.p2.medecin, true);
+  }
 
+  console.log('🔍 DT PDF - Génération terminée');
   return pdfDoc.save();
 }
 
+// ── buildVaccinationPdf (Anti-Rabique et autres) ──────────────────────────────
 async function buildVaccinationPdf(payload) {
-  const type    = payload.type || payload.vaccination?.type || 'rage';
+  const type = payload.type || payload.vaccination?.type || 'rage';
   if (type === 'dt') return buildDtPdf(payload);
 
   const templatePath = path.join(__dirname, 'carte_de_vaccination_z.pdf');
-  const pdfDoc  = await PDFDocument.load(fs.readFileSync(templatePath));
-  const font    = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const pages   = pdfDoc.getPages();
-  const p1      = pages[0];
-  const p2      = pages[1];
+  const pdfDoc = await PDFDocument.load(fs.readFileSync(templatePath));
+  const font   = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold   = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const pages  = pdfDoc.getPages();
+  const p1     = pages[0];
+  const p2     = pages[1];
 
-  const patient = payload.patient    || {};
-  const vacc    = payload.vaccination || {};
+  const patient = payload.patient     || {};
+  const vacc    = payload.vaccination  || {};
   const proto   = payload.protocoleData || {};
   const mpvi    = proto.mpvi || {};
 
   const draw = (pg, text, x, y, size = 9, isBold = false, maxW = 0) => {
     if (!pg || text === null || text === undefined || text === '') return;
-    let t = String(text);
+    let t = cleanText(String(text));
     const f = isBold ? bold : font;
     if (maxW > 0) while (t.length > 1 && f.widthOfTextAtSize(t, size) > maxW) t = t.slice(0, -1);
     pg.drawText(t, { x, y, size, font: f, color: rgb(0, 0, 0) });
+  };
+  const DATE_BASELINE_SHIFT = -1.25;
+  const drawDate = (pg, value, x, y, size = 8, maxW = 0) => {
+    if (!pg || !value) return;
+    draw(pg, fmtDate(value), x, y + DATE_BASELINE_SHIFT, size, false, maxW);
   };
   const dot = (pg, x, y, r = 4) => {
     if (!pg) return;
@@ -1403,7 +1279,7 @@ async function buildVaccinationPdf(payload) {
   };
   const drawLines = (pg, text, x, y, size, maxW, lineH = 10) => {
     if (!text) return;
-    const words = String(text).split(' ');
+    const words = cleanText(String(text)).split(' ');
     let line = ''; let cy = y;
     for (const w of words) {
       const candidate = line ? `${line} ${w}` : w;
@@ -1422,7 +1298,7 @@ async function buildVaccinationPdf(payload) {
   draw(p1, patient.poids ? `${patient.poids} Kg` : '',   460, 165, 9);
   draw(p1, adresse.slice(0, 62),                          356, 148, 8, false, 218);
   if (adresse.length > 62) draw(p1, adresse.slice(62, 120), 314, 138, 8, false, 258);
-  draw(p1, fmtDate(proto.dateExposition || vacc.dateAdministration), 405, 113, 9, false, 168);
+  drawDate(p1, proto.dateExposition || vacc.dateAdministration, 405, 113, 9, 168);
 
   const gradeCx = { 'Grade I': 380, 'Grade II': 466, 'Grade III': 554 };
   if (gradeCx[proto.grade]) dot(p1, gradeCx[proto.grade], 86, 4);
@@ -1436,8 +1312,8 @@ async function buildVaccinationPdf(payload) {
   }
 
   const TABLE_ROWS = {
-    J0:{y:361},J1:{y:354},J2:{y:346},J3:{y:338},J4:{y:330},J5:{y:323},J6:{y:314},
-    J10:{y:298},J14:{y:291},J24:{y:283},J29:{y:275},J34:{y:267},J90:{y:260},
+    J0:{y:361}, J1:{y:354}, J2:{y:346}, J3:{y:338}, J4:{y:330}, J5:{y:323}, J6:{y:314},
+    J10:{y:298}, J14:{y:291}, J24:{y:283}, J29:{y:275}, J34:{y:267}, J90:{y:260},
   };
 
   if (type === 'rage') {
@@ -1450,18 +1326,18 @@ async function buildVaccinationPdf(payload) {
       const rowKey = labelToRow[label] || label;
       const rowDef = TABLE_ROWS[rowKey];
       if (!rowDef) return;
-      draw(p1, fmtDate(dateVal), colX, rowDef.y, 7.5, false, 80);
+      drawDate(p1, dateVal, colX, rowDef.y, 7.5, 80);
     });
   }
 
   const terrain = patient.maladiesChroniques || patient.antecedents || '';
-  draw(p2, terrain.slice(0, 50),                    135, 397, 8, false, 150);
+  draw(p2, terrain.slice(0, 50), 135, 397, 8, false, 150);
   if (terrain.length > 50) draw(p2, terrain.slice(50, 100), 21, 386, 8, false, 286);
 
   const expo = String(proto.circonstancesMorsure || '').toLowerCase();
-  if      (expo.includes('morsure'))                               dot(p2, 117, 369, 4);
-  else if (expo.includes('griff'))                                 dot(p2, 177, 369, 4);
-  else if (expo.includes('lechage') || expo.includes('léchage'))  dot(p2, 231, 369, 4);
+  if      (expo.includes('morsure'))                              dot(p2, 117, 369, 4);
+  else if (expo.includes('griff'))                                dot(p2, 177, 369, 4);
+  else if (expo.includes('lechage') || expo.includes('léchage')) dot(p2, 231, 369, 4);
 
   const locStr = Array.isArray(proto.localisationPlaies) ? proto.localisationPlaies.join(', ') : (proto.localisationPlaies || '');
   draw(p2, locStr, 101, 350, 8, false, 183);
@@ -1475,13 +1351,12 @@ async function buildVaccinationPdf(payload) {
   dot(p2, proto.erig ? 114 : 190, 265, 4);
 
   if (proto.erig) {
-    draw(p2, fmtDate(proto.erigDate),                         136, 246, 8, false, 152);
+    drawDate(p2, proto.erigDate,                                          136, 246, 8, 152);
     draw(p2, proto.erigQuantiteTotale ? `${proto.erigQuantiteTotale} ml` : '', 144, 232, 8, false, 122);
     draw(p2, proto.erigQuantiteIM ? `${proto.erigQuantiteIM} ml` : '',         162, 204, 8, false, 54);
-    draw(p2, proto.erigLot || '',                              56, 190, 8, false, 222);
-    draw(p2, fmtDate(proto.erigPeremption),                   124, 174, 8, false, 152);
+    draw(p2, proto.erigLot || '',                                          56, 190, 8, false, 222);
+    drawDate(p2, proto.erigPeremption,                                    124, 174, 8, 152);
 
-    // III.4 Suture
     if (proto.suture) {
       dot(p2, 110, 245, 4);
       if (proto.sutureDetail && proto.sutureDetail.toLowerCase().includes('avant')) dot(p2, 130, 235, 4);
@@ -1492,17 +1367,15 @@ async function buildVaccinationPdf(payload) {
   }
 
   dot(p2, proto.varType === 'cellulaire' ? 142 : 200, 157, 4);
-  draw(p2, fmtDate(vacc.dateAdministration),  133, 137, 8, false, 152);
-  draw(p2, proto.varLot || proto.lot || '',    56, 122, 8, false, 222);
-  draw(p2, fmtDate(proto.varPeremption || proto.peremption), 124, 106, 8, false, 152);
+  drawDate(p2, vacc.dateAdministration,  133, 137, 8, 152);
+  draw(p2, proto.varLot || proto.lot || '',  56, 122, 8, false, 222);
+  drawDate(p2, proto.varPeremption || proto.peremption, 124, 106, 8, 152);
 
-  // Voie VAR
   const varVoie = String(proto.varVoieAdmin || proto.varVoie || '').toLowerCase();
   if (varVoie.includes('sous')) dot(p2, 130, 170, 4);
   else if (varVoie.includes('intra d') || varVoie.includes('derm')) dot(p2, 160, 162, 4);
-  else dot(p2, 150, 154, 4); // intra musculaire par défaut
+  else dot(p2, 150, 154, 4);
 
-  // Dose de base tissulaire
   if (proto.varDoseBase) draw(p2, proto.varDoseBase, 100, 145, 8, false, 80);
 
   const hasDT = (type === 'dt');
@@ -1516,13 +1389,13 @@ async function buildVaccinationPdf(payload) {
       const zagrebMap = { 'J0 (2 sites)':{x:394,y:366},'J7':{x:394,y:336},'J21':{x:394,y:304},'Rappel (J90)':{x:394,y:280} };
       Object.entries(datesVAR).forEach(([label, dateVal]) => {
         const coord = zagrebMap[label];
-        if (coord && dateVal) draw(p2, fmtDate(dateVal), coord.x, coord.y, 7.5, false, 85);
+        if (coord && dateVal) drawDate(p2, dateVal, coord.x, coord.y, 7.5, 85);
       });
     } else {
       const essenMap = { 'J0':{x:488,y:366},'J3':{x:488,y:354},'J7':{x:488,y:336},'J14':{x:488,y:320},'J28':{x:488,y:304} };
       Object.entries(datesVAR).forEach(([label, dateVal]) => {
         const coord = essenMap[label];
-        if (coord && dateVal) draw(p2, fmtDate(dateVal), coord.x, coord.y, 7.5, false, 85);
+        if (coord && dateVal) drawDate(p2, dateVal, coord.x, coord.y, 7.5, 85);
       });
     }
   }
@@ -1543,29 +1416,30 @@ async function buildVaccinationPdf(payload) {
 
   if (type !== 'rage') {
     const lines = [];
-    if (type === 'grippe')  lines.push(`Grippe ${proto.saison||''} — ${proto.souche||''} | ${proto.marque||''} | Lot: ${proto.lot||'-'}`);
+    if (type === 'grippe')       lines.push(`Grippe ${proto.saison||''} — ${proto.souche||''} | ${proto.marque||''} | Lot: ${proto.lot||'-'}`);
     else if (type === 'hepb')    lines.push(`Hepatite B — Schema: ${proto.schema||'-'} | ${proto.marque||''} | Lot: ${proto.lot||'-'}`);
     else if (type === 'dt')      lines.push(`DT — Schema: ${proto.schema||'-'} | ${proto.marque||''} | Lot: ${proto.lot||'-'}`);
     else if (type === 'pneumo')  lines.push(`Pneumocoque — ${proto.typeVaccin||''} | ${proto.numeroDose||'-'} | Lot: ${proto.lot||'-'}`);
     else if (type === 'meningo') lines.push(`Meningocoque — ${proto.typeVaccin||''} | ${proto.numeroDose||'-'} | Lot: ${proto.lot||'-'}`);
     if (proto.observations) lines.push(`Obs: ${proto.observations}`);
     lines.slice(0, 3).forEach((line, i) => draw(p1, line, 30, 56 - i * 11, 8, false, 202));
-    draw(p2, fmtDate(vacc.dateAdministration), 133, 137, 8, false, 152);
+    drawDate(p2, vacc.dateAdministration, 133, 137, 8, 152);
     draw(p2, proto.lot || '', 56, 122, 8, false, 222);
-    draw(p2, fmtDate(proto.peremption), 124, 106, 8, false, 152);
+    drawDate(p2, proto.peremption, 124, 106, 8, 152);
     draw(p2, `Vaccin: ${vacc.vaccin || type}`, 38, 147, 8, false, 265);
   }
 
   return pdfDoc.save();
 }
 
+// ── buildOrdonnancePdf ────────────────────────────────────────────────────────
 async function buildOrdonnancePdf(payload) {
   const templatePath = path.join(__dirname, 'ordonnance_haute_qualite.pdf');
   const pdfDoc = await PDFDocument.load(fs.readFileSync(templatePath));
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const page = pdfDoc.getPages()[0];
-  const patient = payload.patient || {};
+  const patient    = payload.patient    || {};
   const ordonnance = payload.ordonnance || {};
   const meds = Array.isArray(ordonnance.medicaments) ? ordonnance.medicaments : [];
   const rawPatientAge = normalizeText(patient.age);
@@ -1575,35 +1449,26 @@ async function buildOrdonnancePdf(payload) {
 
   const draw = (text, x, y, size = 10, isBold = false, maxW = 0) => {
     if (text === null || text === undefined || text === '') return;
-    let t = String(text);
+    let t = cleanText(String(text));
     const f = isBold ? bold : font;
     if (maxW > 0) while (t.length > 1 && f.widthOfTextAtSize(t, size) > maxW) t = t.slice(0, -1);
     page.drawText(t, { x, y, size, font: f, color: rgb(0, 0, 0) });
   };
   const drawLines = (text, x, y, size, maxW, lineH = 12, maxLines = 3) => {
     if (!text) return;
-    const words = String(text).split(' ');
-    let line = '';
-    let cy = y;
-    let lines = 0;
+    const words = cleanText(String(text)).split(' ');
+    let line = ''; let cy = y; let lines = 0;
     for (const w of words) {
       const candidate = line ? `${line} ${w}` : w;
       if (font.widthOfTextAtSize(candidate, size) > maxW && line) {
-        draw(line, x, cy, size, false, maxW);
-        cy -= lineH;
-        line = w;
-        lines += 1;
+        draw(line, x, cy, size, false, maxW); cy -= lineH; line = w; lines += 1;
         if (lines >= maxLines) return;
-      } else {
-        line = candidate;
-      }
+      } else { line = candidate; }
     }
     if (line && lines < maxLines) draw(line, x, cy, size, false, maxW);
   };
 
-  const dateOrd = ordonnance.date
-    ? fmtDate(ordonnance.date)
-    : fmtDate(new Date().toISOString().slice(0, 10));
+  const dateOrd = ordonnance.date ? fmtDate(ordonnance.date) : fmtDate(new Date().toISOString().slice(0, 10));
   draw(dateOrd, COORDS_ORDONNANCE.date.x, COORDS_ORDONNANCE.date.y, COORDS_ORDONNANCE.date.size);
 
   const nomComplet = `${patient.prenom || ''} ${patient.nom || ''}`.trim();
@@ -1613,7 +1478,6 @@ async function buildOrdonnancePdf(payload) {
     ? `${fmtDate(patient.dateNaissance)}${patientAge ? `  (${patientAge})` : ''}`
     : patientAge;
   draw(dateNaiss, COORDS_ORDONNANCE.dateNaissance.x, COORDS_ORDONNANCE.dateNaissance.y, COORDS_ORDONNANCE.dateNaissance.size, false, 350);
-
   draw(patient.numeroCNAS || patient.nImmat || '', COORDS_ORDONNANCE.nImmat.x, COORDS_ORDONNANCE.nImmat.y, COORDS_ORDONNANCE.nImmat.size, false, 180);
 
   meds.slice(0, 6).forEach((med, i) => {
@@ -1621,21 +1485,15 @@ async function buildOrdonnancePdf(payload) {
     const coord = COORDS_ORDONNANCE.rx[i];
     const parts = [med.nom];
     if (med.dosage) parts.push(med.dosage);
-    if (med.duree) parts.push(med.duree);
-    const ligne = `Rx ${i + 1}:  ${parts.join('   -   ')}`;
-    draw(ligne, coord.x, coord.y, coord.size, false, 530);
-
-    if (med.instructions && i < 5) {
-      draw(`        ${med.instructions}`, coord.x, coord.y - 10, 8, false, 530);
-    }
+    if (med.duree)  parts.push(med.duree);
+    draw(`Rx ${i + 1}:  ${parts.join('   -   ')}`, coord.x, coord.y, coord.size, false, 530);
+    if (med.instructions && i < 5) draw(`        ${med.instructions}`, coord.x, coord.y - 10, 8, false, 530);
   });
 
   if (ordonnance.observations) {
     const obs = ordonnance.observations;
     draw(obs.slice(0, 90), COORDS_ORDONNANCE.obs[0].x, COORDS_ORDONNANCE.obs[0].y, COORDS_ORDONNANCE.obs[0].size, false, 530);
-    if (obs.length > 90) {
-      draw(obs.slice(90, 180), COORDS_ORDONNANCE.obs[1].x, COORDS_ORDONNANCE.obs[1].y, COORDS_ORDONNANCE.obs[1].size, false, 530);
-    }
+    if (obs.length > 90) draw(obs.slice(90, 180), COORDS_ORDONNANCE.obs[1].x, COORDS_ORDONNANCE.obs[1].y, COORDS_ORDONNANCE.obs[1].size, false, 530);
   }
 
   const medecinLabel = ordonnance.medecin ? `Dr. ${ordonnance.medecin}` : '';
@@ -1644,6 +1502,7 @@ async function buildOrdonnancePdf(payload) {
   return pdfDoc.save();
 }
 
+// ── Routes PDF ────────────────────────────────────────────────────────────────
 app.post('/api/generate-pdf', async (req, res) => {
   try {
     const pdfBytes = await buildVaccinationPdf(req.body);
@@ -1678,11 +1537,7 @@ app.post('/api/generate-dt-pdf', async (req, res) => {
     const { patient = {} } = req.body;
     const fname = `carte_DT_${patient.nom || 'patient'}_${patient.prenom || ''}.pdf`
       .replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '');
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${fname}"`,
-      'Content-Length': pdfBytes.length,
-    });
+    res.set({ 'Content-Type':'application/pdf', 'Content-Disposition':`attachment; filename="${fname}"`, 'Content-Length':pdfBytes.length });
     res.send(Buffer.from(pdfBytes));
   } catch (err) {
     console.error('❌ DT PDF error:', err?.message);

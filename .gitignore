@@ -2,6 +2,7 @@ client/node_modules
 server/node_modules
 server/__pycache__/
 server/carte de vaccination z.pdf
+
 node_modules/
 __pycache__/
 *.pyc
