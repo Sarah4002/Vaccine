@@ -31,13 +31,13 @@
       "client/package.json",
       "server/**/*.js",
       "server/**/*.json",
-    "server/**/*.pdf",
-    "server/**/*.ps1",
-    "server/**/*.py",
-    "server/node_modules/**/*",
-    "!server/uploads_tmp{,/**/*}",
-    "!server/ANTIRAB*.xlsx",
-    "!server/~$*.xlsx"
+      "server/**/*.pdf",
+      "server/**/*.ps1",
+      "server/**/*.py",
+      "server/node_modules/**/*",
+      "!server/uploads_tmp{,/**/*}",
+      "!server/ANTIRAB*.xlsx",
+      "!server/~$*.xlsx"
     ],
     "win": {
       "icon": "build/icon.ico"
