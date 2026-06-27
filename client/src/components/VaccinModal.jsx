@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 
 import { API_BASE, api } from '../utils/api';
+import { useI18n } from '../i18n';
 
 export const PROTOCOLES = {
   rage: { label: 'Anti-Rabique', grades: ['Grade I', 'Grade II', 'Grade III'] },
@@ -150,14 +151,14 @@ const StepBadge = ({ num, label, active, done, onClick }) => (
   </div>
 );
 
-// ── Utilitaire: ajouter N jours à une date ISO ─────────────────────────────
+// -- Utilitaire: ajouter N jours � une date ISO -----------------------------
 function addDays(isoDate, n) {
   const d = new Date(isoDate);
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 }
 
-// ── Calcul automatique des dates VAR depuis J0 ─────────────────────────────
+// -- Calcul automatique des dates VAR depuis J0 -----------------------------
 function computeAutoVARDates(j0, varType, cellulProtocole, grade, existingManuel = {}) {
   const dates = {};
 
@@ -205,7 +206,7 @@ function getNextRageDoseDate(dateAdministration, datesVAR = {}) {
     .sort()[0] || '';
 }
 
-// ── MPVI ─────────────────────────────────────────────────────────────────────
+// -- MPVI ---------------------------------------------------------------------
 function MpviSection({ data = {}, onChange }) {
   const u = (k, v) => onChange({ ...data, [k]: v });
   return (
@@ -263,7 +264,7 @@ function MpviSection({ data = {}, onChange }) {
   );
 }
 
-// ── GRIPPE ────────────────────────────────────────────────────────────────────
+// -- GRIPPE --------------------------------------------------------------------
 function GrippeSection({ grippe, setGrippe }) {
   const uG = (k, v) => setGrippe(p => ({ ...p, [k]: v }));
   const currentYear = new Date().getFullYear();
@@ -327,7 +328,7 @@ function GrippeSection({ grippe, setGrippe }) {
   );
 }
 
-// ── PNEUMOCOQUE ───────────────────────────────────────────────────────────────
+// -- PNEUMOCOQUE ---------------------------------------------------------------
 function PneumoSection({ pneumo, setPneumo }) {
   const uP = (k, v) => setPneumo(p => ({ ...p, [k]: v }));
   return (
@@ -395,7 +396,7 @@ function PneumoSection({ pneumo, setPneumo }) {
   );
 }
 
-// ── MENINGOCOQUE ──────────────────────────────────────────────────────────────
+// -- MENINGOCOQUE --------------------------------------------------------------
 function MeningoSection({ meningo, setMeningo }) {
   const uM = (k, v) => setMeningo(p => ({ ...p, [k]: v }));
   return (
@@ -457,7 +458,7 @@ function MeningoSection({ meningo, setMeningo }) {
   );
 }
 
-// ── RAGE SECTION ──────────────────────────────────────────────────────────────
+// -- RAGE SECTION --------------------------------------------------------------
 function RageSection({ rage, setRage, patient }) {
   const uR = (k, v) => setRage(p => ({ ...p, [k]: v }));
 
@@ -560,7 +561,9 @@ function RageSection({ rage, setRage, patient }) {
               ['tete','Tete'],['face','Face'],['cou','Cou'],['main','Main'],['pied','Pied'],
               ['organes genitaux externes','Organes Genitaux Externes'],
               ['membre(s) superieur(s)','Membre(s) Superieur(s)'],
-              ['membre(s) inferieur(s)','Membre(s) Inferieur(s)']
+              ['membre(s) inferieur(s)','Membre(s) Inferieur(s)'],
+              ['tronc','Tronc'],
+              ['non precise','Non precise']
             ].map(([value, label]) => (
               <CheckRow key={value}
                 checked={(rage.localisationPlaies||[]).includes(value)}
@@ -733,7 +736,7 @@ function RageSection({ rage, setRage, patient }) {
 
       {/* ATD et Antibiotique */}
       <div style={{ border: '1px solid #eaebef', borderRadius: 14, padding: '18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <Field label="Vaccin antitetanique et antidiphtérique" span={2}>
+        <Field label="Vaccin antitetanique et antidipht�rique" span={2}>
           <RadioGroup
             options={[{id:'non',label:'Non'},{id:'oui',label:'Oui'}]}
             value={rage.vaccinATD || 'non'}
@@ -799,7 +802,7 @@ function RageSection({ rage, setRage, patient }) {
           </Field>
         )}
 
-        {/* ── Dates d'Administration VAR avec calcul automatique ── */}
+        {/* -- Dates d'Administration VAR avec calcul automatique -- */}
         <Field label="Dates d'Administration VAR" span={2}>
           <div style={{ marginBottom: 8, padding: '8px 12px', background: '#f0f4ff', border: '1px solid #e0e7ff', borderRadius: 8, fontSize: 11, color: '#0056ff', fontWeight: 600 }}>
             Saisissez J0 pour calculer automatiquement les dates suivantes. Utilisez le bouton Modifier pour ajuster une date manuellement.
@@ -906,7 +909,7 @@ function RageSection({ rage, setRage, patient }) {
   );
 }
 
-// ── HEPATITE B ────────────────────────────────────────────────────────────────
+// -- HEPATITE B ----------------------------------------------------------------
 function HepbSection({ hepb, setHepb }) {
   const uH = (k, v) => setHepb(p => ({ ...p, [k]: v }));
   const schema = PROTOCOLES.hepb.schemas.find(s => s.id === (hepb.schema||'standard'));
@@ -956,7 +959,7 @@ function HepbSection({ hepb, setHepb }) {
   );
 }
 
-// ── Utilitaire : ajouter N mois à une date ISO ────────────────────────────
+// -- Utilitaire : ajouter N mois � une date ISO ----------------------------
 function addMonthsDT(isoDate, months) {
   if (!isoDate) return '';
   try {
@@ -966,7 +969,7 @@ function addMonthsDT(isoDate, months) {
   } catch { return ''; }
 }
 
-// ── Utilitaire : ajouter N ans à une date ISO ─────────────────────────────
+// -- Utilitaire : ajouter N ans � une date ISO -----------------------------
 function addYearsDT(isoDate, years) {
   if (!isoDate) return '';
   try {
@@ -976,11 +979,11 @@ function addYearsDT(isoDate, years) {
   } catch { return ''; }
 }
 
-// ── DT SECTION — même design de grille que les dates VAR anti-rabiques ───────
+// -- DT SECTION � m�me design de grille que les dates VAR anti-rabiques -------
 function DtSection({ dt, setDt }) {
   const uD = (k, v) => setDt(p => ({ ...p, [k]: v }));
 
-  // Définition des doses avec leur offset de calcul
+  // D�finition des doses avec leur offset de calcul
   const dtDoses = [
     { key: 'D1',     label: '1ere dose',     sublabel: 'Date de debut',  isBase: true,  manualFlag: null },
     { key: 'D2',     label: 'D2',            sublabel: 'D1 + 2 mois',    isBase: false, manualFlag: '_d2Manuel' },
@@ -1008,7 +1011,7 @@ function DtSection({ dt, setDt }) {
     }));
   };
 
-  // Basculer entre auto et manuel (même logique que VAR: Modifier / Verrouiller)
+  // Basculer entre auto et manuel (m�me logique que VAR: Modifier / Verrouiller)
   const toggleManuelDT = (key, manualFlag) => {
     const isNowManuel = !dt[manualFlag];
     if (!isNowManuel) {
@@ -1030,7 +1033,7 @@ function DtSection({ dt, setDt }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SectionBox title="Protocole DT (Antidiphtérique et Antitétanique)" color="#0056ff">
+      <SectionBox title="Protocole DT (Antidipht�rique et Antit�tanique)" color="#0056ff">
 
         <Field label="Schema" span={2}>
           <RadioGroup
@@ -1067,7 +1070,7 @@ function DtSection({ dt, setDt }) {
           {dt.plaie && (
             <input
               style={{ ...inputStyle, marginTop: 8 }}
-              placeholder="Plaie souillée, brûlure..."
+              placeholder="Plaie souill�e, br�lure..."
               value={dt.typePlaie || ''}
               onChange={e => uD('typePlaie', e.target.value)}
             />
@@ -1075,7 +1078,7 @@ function DtSection({ dt, setDt }) {
         </Field>
       </SectionBox>
 
-      {/* ── Calendrier vaccinal DT — même design que dates VAR ── */}
+      {/* -- Calendrier vaccinal DT � m�me design que dates VAR -- */}
       <div style={{ border: '1px solid #eaebef', borderRadius: 14, overflow: 'hidden' }}>
         <div style={{ background: '#ebf2ff', borderBottom: '1px solid #e0e7ff', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontWeight: 800, fontSize: 12, color: '#0056ff', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
@@ -1201,8 +1204,9 @@ function DtSection({ dt, setDt }) {
   );
 }
 
-// ── COMPOSANT PRINCIPAL ───────────────────────────────────────────────────────
+// -- COMPOSANT PRINCIPAL -------------------------------------------------------
 export default function VaccinModal({ vaccination, patients = [], initialPatientId, onClose, onSave }) {
+  const { langue } = useI18n();
   const isEdit = !!vaccination;
   const [step,       setStep]       = useState(1);
   const [saving,     setSaving]     = useState(false);
@@ -1364,7 +1368,7 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
   };
 
   const handleSave = async () => {
-    if (!form.patientId) { alert('Selectionnez un patient'); return; }
+    if (!form.patientId) { alert(langue === 'en' ? 'Select a patient' : 'Selectionnez un patient'); return; }
     setSaving(true);
     const vaccinLabel = {
       rage:    rage.varType === 'cellulaire' ? 'Anti-Rabique Cellulaire' : 'Anti-Rabique Tissulaire',
@@ -1391,11 +1395,11 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
   };
 
   const handleDownloadPDF = async () => {
-    if (!selectedPatient) { alert('Selectionnez un patient'); return; }
-    if (form.type !== 'rage' && form.type !== 'dt') { alert('La carte PDF est disponible uniquement pour les protocoles anti-rabique et DT.'); return; }
+    if (!selectedPatient) { alert(langue === 'en' ? 'Select a patient' : 'Selectionnez un patient'); return; }
+    if (form.type !== 'rage' && form.type !== 'dt') { alert(langue === 'en' ? 'PDF card is available only for anti-rabies and DT protocols.' : 'La carte PDF est disponible uniquement pour les protocoles anti-rabique et DT.'); return; }
     setPdfLoading(true);
     try { await downloadPDF(selectedPatient, { ...form }, buildProto(), form.type); }
-    catch(e) { alert('Erreur PDF : ' + e.message); }
+    catch(e) { alert((langue === 'en' ? 'PDF error: ' : 'Erreur PDF : ') + e.message); }
     finally { setPdfLoading(false); }
   };
 
@@ -1443,7 +1447,7 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
             <div>
               <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>
-                {isEdit ? 'Modifier le Registre' : 'Nouveau Registre Vaccinal'}
+                {isEdit ? (langue === 'en' ? 'Edit Record' : 'Modifier le Registre') : (langue === 'en' ? 'New Vaccination Record' : 'Nouveau Registre Vaccinal')}
               </h2>
               {selectedPatient && (
                 <span style={{ background: '#ebf2ff', color: '#0056ff', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
@@ -1521,7 +1525,7 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                     <input
                       style={inputStyle}
                       value={patientQuery}
-                      placeholder="Rechercher un patient existant..."
+                      placeholder={langue === 'en' ? 'Search for an existing patient...' : 'Rechercher un patient existant...'}
                       onFocus={() => setPatientDropdownOpen(true)}
                       onChange={e => {
                         setPatientQuery(e.target.value);
@@ -1544,9 +1548,9 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                         overflowY: 'auto',
                       }}>
                         {patientSearchLoading ? (
-                          <div style={{ padding: '12px 14px', fontSize: 12, color: '#8a94a6' }}>Recherche en cours...</div>
+                          <div style={{ padding: '12px 14px', fontSize: 12, color: '#8a94a6' }}>{langue === 'en' ? 'Searching...' : 'Recherche en cours...'}</div>
                         ) : patientOptions.length === 0 ? (
-                          <div style={{ padding: '12px 14px', fontSize: 12, color: '#8a94a6' }}>Aucun patient trouve dans la base</div>
+                          <div style={{ padding: '12px 14px', fontSize: 12, color: '#8a94a6' }}>{langue === 'en' ? 'No patient found in the database' : 'Aucun patient trouve dans la base'}</div>
                         ) : (
                           patientOptions.slice(0, 100).map(patient => (
                             <button
@@ -1577,14 +1581,10 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                     )}
                     <div style={{ fontSize: 11, color: '#8a94a6' }}>
                       {patientSearchLoading
-                        ? 'Recherche dans toute la base de donnees...'
+                        ? (langue === 'en' ? 'Searching the full database...' : 'Recherche dans toute la base de donnees...')
                         : `${patientOptions.length} patient(s) charge(s) depuis la base`}
                     </div>
-                    {selectedPatient && (
-                      <div style={{ padding: '10px 12px', borderRadius: 10, background: '#ebf2ff', border: '1px solid #dbeafe', fontSize: 12, color: '#0056ff', fontWeight: 700 }}>
-                        Patient selectionne : {formatPatientLabel(selectedPatient)}
-                      </div>
-                    )}
+                    
                   </div>
                 </Field>
               </div>
@@ -1786,7 +1786,7 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                   <line x1="12" y1="18" x2="12" y2="12"/>
                   <line x1="9" y1="15" x2="15" y2="15"/>
                 </svg>
-                {pdfLoading ? 'Generation...' : 'PDF'}
+                {pdfLoading ? (langue === 'en' ? 'Generating...' : 'Generation...') : 'PDF'}
               </button>
             )}
             {step < 3
@@ -1807,13 +1807,13 @@ export default function VaccinModal({ vaccination, patients = [], initialPatient
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ animation: 'spin .7s linear infinite' }}>
                         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                       </svg>
-                      Enregistrement...
+                      {langue === 'en' ? 'Saving...' : 'Enregistrement...'}
                       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                     </>
                   ) : (
                     <>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      {isEdit ? 'Enregistrer' : 'Creer le Registre'}
+                      {isEdit ? (langue === 'en' ? 'Save' : 'Enregistrer') : (langue === 'en' ? 'Create record' : 'Creer le Registre')}
                     </>
                   )}
                 </button>

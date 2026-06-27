@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 import VaccinModal from '../components/VaccinModal';
 import OrdonnanceModal from '../components/OrdonnanceModal';
 import algeriaData from '../data/algeria.json';
+import { useI18n } from '../i18n';
 
 // ─── Impression : Dossier Patient ────────────────────────────────────────────
 function printDossierPatient(patient) {
@@ -88,7 +89,7 @@ function printDossierPatient(patient) {
     </div>
   </div>
   <div class="section">
-    <div class="section-title">Situation Professionnelle</div>
+    <div class="section-title">{langue === 'en' ? 'Professional situation' : 'Situation Professionnelle'}</div>
     <div class="info-grid">
       <div class="info-item"><label>Fonction</label><span>${patient.fonction || '—'}</span></div>
       <div class="info-item"><label>Service</label><span>${patient.service || '—'}</span></div>
@@ -240,6 +241,61 @@ const EMPTY = {
   notesClinicien: '',
 };
 
+const MEDICAL_MULTI_OPTIONS = {
+  antecedents: [
+    'Chirurgie',
+    'Hospitalisation',
+    'Diabete',
+    'HTA',
+    'Asthme',
+    'Cardiopathie',
+  ],
+  allergies: [
+    'Aucune',
+    'Penicilline',
+    'AINS',
+    'Aliments',
+    'Pollen',
+    'Latex',
+  ],
+  maladiesChroniques: [
+    'Aucune',
+    'Diabete',
+    'HTA',
+    'Asthme',
+    'Insuffisance renale',
+    'Cardiopathie',
+  ],
+  contreIndications: [
+    'Aucune',
+    'Immunodepression',
+    'Grossesse',
+    'Fievre aigue',
+    'Reaction severe anterieure',
+    'Allergie a un composant vaccinal',
+  ],
+};
+
+function splitMultiValue(value = '') {
+  return String(value)
+    .split(/[\n,;]+/)
+    .map(item => item.trim())
+    .filter(Boolean);
+}
+
+function parseMultiValue(value, options) {
+  const values = splitMultiValue(value);
+  return {
+    selected: values.filter(item => options.includes(item)),
+    custom: values.filter(item => !options.includes(item)).join(', '),
+  };
+}
+
+function buildMultiValue(selected, custom) {
+  const customValues = splitMultiValue(custom);
+  return [...new Set([...selected, ...customValues])].join(', ');
+}
+
 // ─── Composant champ de formulaire ───────────────────────────────────────────
 const Field = ({ label, required, children }) => (
   <div>
@@ -258,6 +314,18 @@ const inputStyle = {
 
 const textareaStyle = {
   ...inputStyle, resize: 'vertical', minHeight: 72, fontFamily: 'inherit',
+};
+
+const choiceButtonStyle = {
+  padding: '9px 12px',
+  borderRadius: 999,
+  border: '1px solid #dbe2ea',
+  background: 'white',
+  color: '#516074',
+  fontSize: 12,
+  fontWeight: 700,
+  cursor: 'pointer',
+  transition: 'all .15s',
 };
 
 // ─── Badge étape ─────────────────────────────────────────────────────────────
@@ -322,8 +390,58 @@ const MedSection = ({ title, icon, children, defaultOpen = false }) => {
   );
 };
 
+const MultiChoiceField = ({ label, value, options, onChange, customPlaceholder }) => {
+  const { selected, custom } = parseMultiValue(value, options);
+
+  const toggleOption = (option) => {
+    const nextSelected = selected.includes(option)
+      ? selected.filter(item => item !== option)
+      : [...selected, option];
+
+    const cleanedSelected = option === 'Aucune' && !selected.includes(option)
+      ? ['Aucune']
+      : nextSelected.filter(item => item !== 'Aucune' || nextSelected.length === 1);
+
+    onChange(buildMultiValue(cleanedSelected, custom));
+  };
+
+  return (
+    <Field label={label}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {options.map(option => {
+            const active = selected.includes(option);
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => toggleOption(option)}
+                style={{
+                  ...choiceButtonStyle,
+                  borderColor: active ? '#0056ff' : '#dbe2ea',
+                  background: active ? '#ebf2ff' : 'white',
+                  color: active ? '#0056ff' : '#516074',
+                }}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+        <input
+          value={custom}
+          onChange={e => onChange(buildMultiValue(selected.filter(item => item !== 'Aucune'), e.target.value))}
+          placeholder={customPlaceholder}
+          style={inputStyle}
+        />
+      </div>
+    </Field>
+  );
+};
+
 // ─── Modal Patient (2 étapes) ─────────────────────────────────────────────────
 function PatientModal({ patient, onClose, onSave }) {
+  const { langue } = useI18n();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(patient ? { ...EMPTY, ...patient, wilaya: 'Tlemcen' } : { ...EMPTY, wilaya: 'Tlemcen' });
   const [saving, setSaving] = useState(false);
@@ -378,7 +496,7 @@ function PatientModal({ patient, onClose, onSave }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
             <div>
               <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: '#1d2129', marginBottom: 2 }}>
-                {isEditing ? 'Modifier le patient' : 'Nouveau patient'}
+                {langue === 'en' ? (isEditing ? 'Edit patient' : 'New patient') : (isEditing ? 'Modifier le patient' : 'Nouveau patient')}
               </h2>
               {ageBadge && (
                 <span style={{ background: '#ebf2ff', color: '#0056ff', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
@@ -569,42 +687,31 @@ function PatientModal({ patient, onClose, onSave }) {
           {/* ══ ÉTAPE 2 ══ */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#f8f9ff', border: '1px solid #e0e7ff', borderRadius: 12, padding: '12px 16px', marginBottom: 4 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: form.sexe === 'M' ? '#ebf2ff' : '#fce7f3', color: form.sexe === 'M' ? '#0056ff' : '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flexShrink: 0 }}>
-                  {form.prenom?.[0]}{form.nom?.[0]}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, color: '#1d2129', fontSize: 14 }}>{form.prenom} {form.nom}</div>
-                  <div style={{ fontSize: 11, color: '#8a94a6' }}>{ageBadge || 'Age non renseigne'} · {form.sexe === 'M' ? 'Homme' : 'Femme'}</div>
-                </div>
-                <div style={{ marginLeft: 'auto', fontSize: 11, color: '#0056ff', fontWeight: 600 }}>Dossier médical</div>
-              </div>
 
               <MedSection title="Antécédents & Allergies" icon="" defaultOpen={true}>
-                <Field label="Antécédents médicaux">
-                  <textarea value={form.antecedents} onChange={e => set('antecedents', e.target.value)}
-                    placeholder="Chirurgies, hospitalisations, maladies passées…" style={textareaStyle} />
-                </Field>
-                <Field label="Allergies connues">
-                  <textarea value={form.allergies} onChange={e => set('allergies', e.target.value)}
-                    placeholder="Médicaments, aliments, substances…" style={{ ...textareaStyle, minHeight: 56 }} />
-                </Field>
-                <Field label="Contre-indications vaccinales">
-                  <textarea value={form.contreIndications} onChange={e => set('contreIndications', e.target.value)}
-                    placeholder="Vaccins contre-indiqués et raisons…" style={{ ...textareaStyle, minHeight: 56 }} />
-                </Field>
+                <MultiChoiceField
+                  label="Antécédents médicaux"
+                  value={form.antecedents}
+                  options={MEDICAL_MULTI_OPTIONS.antecedents}
+                  onChange={value => set('antecedents', value)}
+                  customPlaceholder="Autres antecedents..."
+                />
+                <MultiChoiceField
+                  label="Allergies connues"
+                  value={form.allergies}
+                  options={MEDICAL_MULTI_OPTIONS.allergies}
+                  onChange={value => set('allergies', value)}
+                  customPlaceholder="Autres allergies..."
+                />
+                <MultiChoiceField
+                  label="Contre-indications vaccinales"
+                  value={form.contreIndications}
+                  options={MEDICAL_MULTI_OPTIONS.contreIndications}
+                  onChange={value => set('contreIndications', value)}
+                  customPlaceholder="Autres contre-indications..."
+                />
               </MedSection>
 
-              <MedSection title="Maladies chroniques & Traitements" icon="">
-                <Field label="Maladies chroniques">
-                  <textarea value={form.maladiesChroniques} onChange={e => set('maladiesChroniques', e.target.value)}
-                    placeholder="Diabète, HTA, asthme, insuffisance rénale…" style={textareaStyle} />
-                </Field>
-                <Field label="Traitement en cours">
-                  <textarea value={form.traitementEnCours} onChange={e => set('traitementEnCours', e.target.value)}
-                    placeholder="Médicaments actuels, posologie…" style={textareaStyle} />
-                </Field>
-              </MedSection>
 
               <MedSection title="Informations administratives" icon="">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -903,6 +1010,7 @@ const InfoItem = ({ label, value, full }) => (
 
 // ─── Page Détail Patient ──────────────────────────────────────────────────────
 function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
+  const { langue } = useI18n();
   const currentYear = String(new Date().getFullYear());
   const [vaccinations, setVaccinations] = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -962,7 +1070,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
-            Dossiers Patients
+            {langue === 'en' ? 'Patient records' : 'Dossiers Patients'}
           </button>
 
           <div style={{ display: 'flex', gap: 8 }}>
@@ -992,7 +1100,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
               </svg>
-              Modifier
+              {langue === 'en' ? 'Edit' : 'Modifier'}
             </button>
           </div>
         </div>
@@ -1095,7 +1203,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
             </div>
 
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>Chargement…</div>
+              <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>{langue === 'en' ? 'Loading...' : 'Chargement...'}</div>
             ) : vaccinations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 20px', color: '#8a94a6' }}>
                 <div style={{ fontSize: 36, marginBottom: 10 }}>💉</div>
@@ -1114,7 +1222,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
       {/* ══ IDENTITÉ ══ */}
       {activeTab === 'identite' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="Informations Personnelles" icon="👤">
+          <SectionCard title={langue === 'en' ? 'Personal information' : 'Informations Personnelles'} icon="👤">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="Nom" value={patient.nom} />
               <InfoItem label="Prénom" value={patient.prenom} />
@@ -1156,7 +1264,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               <InfoItem label="Contre-indications vaccinales" value={patient.contreIndications} full />
             </div>
           </SectionCard>
-          <SectionCard title="Maladies chroniques & Traitements" icon="💊" accent="#d97706">
+          <SectionCard title="{langue === 'en' ? 'Chronic conditions & Treatments' : 'Maladies chroniques & Traitements'}" icon="💊" accent="#d97706">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <InfoItem label="Maladies chroniques" value={patient.maladiesChroniques} full />
               <InfoItem label="Traitement en cours" value={patient.traitementEnCours} full />
@@ -1181,7 +1289,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
               } />
             </div>
           </SectionCard>
-          <SectionCard title="Informations Administratives" icon="📋" accent="#0891b2">
+          <SectionCard title="{langue === 'en' ? 'Administrative information' : 'Informations Administratives'}" icon="📋" accent="#0891b2">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
               <InfoItem label="N° CNAS" value={patient.numeroCNAS} />
               <InfoItem label="Mutuelle" value={patient.mutuelle} />
@@ -1189,7 +1297,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
             </div>
           </SectionCard>
           {patient.notesClinicien && (
-            <SectionCard title="Notes Clinicien" icon="📝" accent="#8b5cf6">
+            <SectionCard title={langue === 'en' ? 'Clinician notes' : 'Notes Clinicien'} icon="📝" accent="#8b5cf6">
               <InfoItem label="Observations libres" value={patient.notesClinicien} full />
             </SectionCard>
           )}
@@ -1199,7 +1307,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
       {/* ══ SITUATION PRO ══ */}
       {activeTab === 'pro' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="Situation Professionnelle" icon="💼" accent="#0056ff">
+          <SectionCard title="{langue === 'en' ? 'Professional situation' : 'Situation Professionnelle'}" icon="💼" accent="#0056ff">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
               <InfoItem label="Fonction" value={patient.fonction} />
               <InfoItem label="Service" value={patient.service} />
@@ -1215,6 +1323,7 @@ function DetailPatient({ patient, onBack, onEdit, onVaccin, onOrdonnance }) {
 
 // ─── Page Patients (principale) ───────────────────────────────────────────────
 export default function Patients({ setPage, setSelectedPatient }) {
+  const { langue, t } = useI18n();
   const currentYear = String(new Date().getFullYear());
   const [patients, setPatients]                         = useState([]);
   const [search, setSearch]                             = useState('');
@@ -1278,8 +1387,8 @@ export default function Patients({ setPage, setSelectedPatient }) {
       {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>Dossiers Patients</h1>
-          <p style={{ color: '#8a94a6', fontSize: 14 }}>Gérez les carnets vaccinaux et les informations démographiques détaillées.</p>
+          <h1 style={{ fontFamily: 'Syne', fontSize: 26, fontWeight: 800, color: '#1d2129', marginBottom: 4 }}>{t('pat_title')}</h1>
+          <p style={{ color: '#8a94a6', fontSize: 14 }}>{t('pat_subtitle')}</p>
         </div>
         <button onClick={() => setModal('create')}
           style={{ background: '#0056ff', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '50px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,86,255,0.2)' }}>
@@ -1288,36 +1397,34 @@ export default function Patients({ setPage, setSelectedPatient }) {
             <circle cx="12" cy="7" r="4"/>
             <line x1="22" y1="12" x2="16" y2="12"/>
             <line x1="19" y1="9" x2="19" y2="15"/>
-          </svg>
-          Nouveau Patient
-        </button>
+          </svg>{t('pat_add')}</button>
       </div>
 
       <div className="card" style={{ border: 'none', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Annuaire Global ({patients.length})</h3>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{langue === 'en' ? `Global Directory (${patients.length})` : `Annuaire Global (${patients.length})`}</h3>
           <div style={{ position: 'relative', width: '350px' }}>
             <svg style={{ position: 'absolute', left: 16, top: 10, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Rechercher par nom, téléphone ou email…"
+            <input type="text" placeholder={langue === 'en' ? 'Search by name, phone or email...' : 'Rechercher par nom, telephone ou email...'}
               value={search} onChange={e => setSearch(e.target.value)}
               style={{ padding: '10px 16px 10px 42px', borderRadius: '50px', border: '1px solid #eaebef', background: '#f4f5f9', outline: 'none', fontSize: 13, width: '100%', color: '#1d2129' }} />
           </div>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>Chargement…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: '#8a94a6' }}>{langue === 'en' ? 'Loading...' : 'Chargement...'}</div>
         ) : patients.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8a94a6', background: '#f4f5f9', borderRadius: '12px' }}>
-            Aucun dossier patient ne correspond à vos critères.
+            {langue === 'en' ? 'No patient records match your criteria.' : 'Aucun dossier patient ne correspond a vos criteres.'}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ color: '#8a94a6', borderBottom: '1px solid #eaebef' }}>
-                  {['Dossier','Démographie','Contact','Lieu','Actions Rapides'].map(h => (
+                  {(langue === 'en' ? ['Record','Demographics','Contact','Location','Quick Actions'] : ['Dossier','Demographie','Contact','Lieu','Actions Rapides']).map(h => (
                     <th key={h} style={{ padding: '16px 8px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: h === 'Actions Rapides' ? 'right' : 'left' }}>{h}</th>
                   ))}
                 </tr>
@@ -1367,12 +1474,12 @@ export default function Patients({ setPage, setSelectedPatient }) {
                       {/* Démographie */}
                       <td style={{ padding: '16px 8px' }}>
                         <div style={{ color: '#1d2129', fontWeight: 600, fontSize: 13 }}>{age}</div>
-                        <div style={{ color: sexeCouleur, fontSize: 11, fontWeight: 700, marginTop: 4 }}>{p.sexe === 'M' ? 'Homme' : 'Femme'}</div>
+                        <div style={{ color: sexeCouleur, fontSize: 11, fontWeight: 700, marginTop: 4 }}>{p.sexe === 'M' ? (langue === 'en' ? 'Male' : 'Homme') : (langue === 'en' ? 'Female' : 'Femme')}</div>
                       </td>
 
                       {/* Contact */}
                       <td style={{ padding: '16px 8px' }}>
-                        <div style={{ color: '#1d2129', fontSize: 13, fontWeight: 500 }}>{p.telephone || 'Non renseigné'}</div>
+                        <div style={{ color: '#1d2129', fontSize: 13, fontWeight: 500 }}>{p.telephone || (langue === 'en' ? 'Not provided' : 'Non renseigne')}</div>
                         <div style={{ color: '#8a94a6', fontSize: 12, marginTop: 2 }}>{p.email || ''}</div>
                       </td>
 
@@ -1422,10 +1529,10 @@ export default function Patients({ setPage, setSelectedPatient }) {
                             </svg>
                           </button>
 
-                          {/* Modifier */}
+                          {/* {langue === 'en' ? 'Edit' : 'Modifier'} */}
                           <button onClick={() => setModal(p)}
                             style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            title="Modifier le dossier">
+                            title="{langue === 'en' ? 'Edit' : 'Modifier'} le dossier">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                               <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                             </svg>
@@ -1479,3 +1586,4 @@ export default function Patients({ setPage, setSelectedPatient }) {
     </div>
   );
 }
+

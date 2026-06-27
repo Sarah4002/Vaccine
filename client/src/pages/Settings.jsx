@@ -5,7 +5,7 @@ import '../styles/Settings.css';
 const API = process.env.REACT_APP_API || 'http://localhost:3001';
 
 export default function Settings() {
-  const { t, setLangue } = useI18n();
+  const { t, langue, setLangue } = useI18n();
   const [settings, setSettings] = useState({
     langue: 'fr',
     theme: 'light',
@@ -20,18 +20,25 @@ export default function Settings() {
     fetchSettings();
   }, []);
 
+  useEffect(() => {
+    setSettings((current) => ({ ...current, langue }));
+  }, [langue]);
+
   const fetchSettings = async () => {
     try {
       const res = await fetch(`${API}/api/settings`);
       if (res.ok) {
         const data = await res.json();
-        setSettings({
+        const nextSettings = {
           langue: data.langue || 'fr',
           theme: data.theme || 'light',
           notificationsEmail: Boolean(data.notificationsEmail),
           notificationsPush: Boolean(data.notificationsPush),
           affichageRappels: Boolean(data.affichageRappels),
-        });
+        };
+        setSettings(nextSettings);
+        applySettings(nextSettings);
+        setLangue(nextSettings.langue);
       }
       setLoading(false);
     } catch (err) {
@@ -103,9 +110,8 @@ export default function Settings() {
         <div className="settings-section">
           <h2>{t('set_language')}</h2>
           <select name="langue" value={settings.langue} onChange={handleChange} className="input-select">
-            <option value="fr">Français</option>
+            <option value="fr">Francais</option>
             <option value="en">English</option>
-            <option value="ar">العربية</option>
           </select>
         </div>
 
@@ -165,3 +171,5 @@ export default function Settings() {
     </div>
   );
 }
+
+

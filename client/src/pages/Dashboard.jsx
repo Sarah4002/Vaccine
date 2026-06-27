@@ -4,6 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { useI18n } from '../i18n';
 
 // ─── Palette cohérente ────────────────────────────────────────────────────────
 const COLORS = {
@@ -42,6 +43,7 @@ const FILTER_TYPES = [
 ];
 
 const FilterPanel = ({ filters, setFilters }) => {
+  const { langue } = useI18n();
   const [open, setOpen]           = useState(false);
   const [draft, setDraft]         = useState(filters);
   const [activeKey, setActiveKey] = useState(null);
@@ -88,7 +90,7 @@ const FilterPanel = ({ filters, setFilters }) => {
           stroke={activeCount > 0 ? COLORS.blue : '#8a94a6'} strokeWidth="2">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
         </svg>
-        Filtres
+        {langue === 'en' ? 'Filters' : 'Filtres'}
         {activeCount > 0 && (
           <span style={{
             background: COLORS.blue, color: 'white', borderRadius: '50%',
@@ -105,10 +107,10 @@ const FilterPanel = ({ filters, setFilters }) => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.10)', width: 320, overflow: 'hidden',
         }}>
           <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #f0f1f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 800, fontSize: 13, color: '#1d2129' }}>Filtrer par</span>
+            <span style={{ fontWeight: 800, fontSize: 13, color: '#1d2129' }}>{langue === 'en' ? 'Filter by' : 'Filtrer par'}</span>
             {activeCount > 0 && (
               <button onClick={handleReset} style={{ background: 'none', border: 'none', fontSize: 11, color: COLORS.red, fontWeight: 600, cursor: 'pointer', padding: '2px 6px' }}>
-                Tout effacer
+                {langue === 'en' ? 'Clear all' : 'Tout effacer'}
               </button>
             )}
           </div>
@@ -156,7 +158,7 @@ const FilterPanel = ({ filters, setFilters }) => {
                               background: !draft[f.key] ? COLORS.blue : 'white',
                               color: !draft[f.key] ? 'white' : '#8a94a6', transition: 'all .1s',
                             }}
-                          >Tous</button>
+                          >{langue === 'en' ? 'All' : 'Tous'}</button>
                           {f.options.map(opt => (
                             <button key={opt.value}
                               onClick={() => setDraft(d => ({ ...d, [f.key]: opt.value }))}
@@ -173,7 +175,7 @@ const FilterPanel = ({ filters, setFilters }) => {
                         <input
                           type="number"
                           value={draft[f.key] || ''}
-                          placeholder={`Entrer ${f.label.toLowerCase()}...`}
+                          placeholder={langue === 'en' ? 'Enter value...' : `Entrer ${f.label.toLowerCase()}...`}
                           onChange={e => setDraft(d => ({ ...d, [f.key]: e.target.value }))}
                           style={{
                             width: '100%', padding: '8px 12px', borderRadius: 8,
@@ -192,11 +194,11 @@ const FilterPanel = ({ filters, setFilters }) => {
           <div style={{ padding: '12px 16px', display: 'flex', gap: 8, borderTop: '1px solid #f0f1f5' }}>
             <button onClick={() => { setOpen(false); setActiveKey(null); }}
               style={{ flex: 1, padding: '9px', borderRadius: 10, border: '1px solid #eaebef', background: 'white', fontSize: 13, fontWeight: 600, color: '#8a94a6', cursor: 'pointer' }}>
-              Annuler
+              {langue === 'en' ? 'Cancel' : 'Annuler'}
             </button>
             <button onClick={handleApply}
               style={{ flex: 2, padding: '9px', borderRadius: 10, border: 'none', background: COLORS.blue, fontSize: 13, fontWeight: 700, color: 'white', cursor: 'pointer' }}>
-              Appliquer les filtres
+              {langue === 'en' ? 'Apply filters' : 'Appliquer les filtres'}
             </button>
           </div>
         </div>
@@ -207,6 +209,7 @@ const FilterPanel = ({ filters, setFilters }) => {
 
 // ─── Tooltip graphique vaccinations ──────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }) => {
+  const { langue } = useI18n();
   if (active && payload && payload.length) {
     return (
       <div style={{
@@ -216,7 +219,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       }}>
         <div style={{ color: '#8a94a6', marginBottom: 2 }}>{label}</div>
         <div style={{ color: COLORS.blue, fontWeight: 800, fontSize: 16 }}>
-          {payload[0].value} <span style={{ fontSize: 12, fontWeight: 500 }}>Vaccins</span>
+          {payload[0].value} <span style={{ fontSize: 12, fontWeight: 500 }}>{langue === 'en' ? 'Vaccines' : 'Vaccins'}</span>
         </div>
       </div>
     );
@@ -273,6 +276,7 @@ const SectionCard = ({ title, children, action }) => (
 
 // ─── Calendrier complet avec rappels réels ────────────────────────────────────
 const CalendarWidget = ({ rappels, onDayClick }) => {
+  const { langue } = useI18n();
   const today           = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(today.getDate());
@@ -322,7 +326,7 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
   };
 
   const statusColor = (r) => r.enRetard ? COLORS.red : r.urgent ? COLORS.amber : COLORS.blue;
-  const statusLabel = (r) => r.enRetard ? 'En retard' : r.urgent ? 'Urgent' : 'À venir';
+  const statusLabel = (r) => r.enRetard ? (langue === 'en' ? 'Overdue' : 'En retard') : r.urgent ? 'Urgent' : (langue === 'en' ? 'Upcoming' : 'À venir');
 
   // Ouvrir le modal ou le panneau inline selon la source
   const openDayDetail = (day, source = 'calendar') => {
@@ -345,11 +349,11 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 15, color: '#1d2129', margin: 0 }}>Rappels</h3>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 15, color: '#1d2129', margin: 0 }}>{langue === 'en' ? 'Reminders' : 'Rappels'}</h3>
           <select value={scope} onChange={e => { setScope(e.target.value); setSelectedDay(null); }}
             style={{ padding: '5px 10px', borderRadius: 20, border: '1px solid #eaebef', fontSize: 12, background: 'white', cursor: 'pointer' }}>
-            <option value="month">Ce mois</option>
-            <option value="week">Cette semaine</option>
+            <option value="month">{langue === 'en' ? 'This month' : 'Ce mois'}</option>
+            <option value="week">{langue === 'en' ? 'This week' : 'Cette semaine'}</option>
           </select>
         </div>
 
@@ -425,7 +429,7 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
 
             {/* Légende */}
             <div style={{ display: 'flex', gap: 10, marginTop: 10, fontSize: 10, color: '#8a94a6', flexWrap: 'wrap' }}>
-              {[[COLORS.blue,'À venir'],[COLORS.amber,'Urgent'],[COLORS.red,'En retard']].map(([c,l]) => (
+              {[[COLORS.blue, langue === 'en' ? 'Upcoming' : 'À venir'],[COLORS.amber,'Urgent'],[COLORS.red, langue === 'en' ? 'Overdue' : 'En retard']].map(([c,l]) => (
                 <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: c, display: 'inline-block' }} />{l}
                 </span>
@@ -520,9 +524,9 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
         {/* ── COMPTEURS BAS ── */}
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           {[
-            { label: 'Ce mois',   count: totalThisMonth,                            color: COLORS.blue  },
-            { label: 'Urgents',   count: rappels.filter(r => r.urgent).length,      color: COLORS.amber },
-            { label: 'En retard', count: rappels.filter(r => r.enRetard).length,    color: COLORS.red   },
+            { label: langue === 'en' ? 'This month' : 'Ce mois', count: totalThisMonth, color: COLORS.blue  },
+            { label: langue === 'en' ? 'Urgent' : 'Urgents', count: rappels.filter(r => r.urgent).length, color: COLORS.amber },
+            { label: langue === 'en' ? 'Overdue' : 'En retard', count: rappels.filter(r => r.enRetard).length, color: COLORS.red },
           ].map(s => (
             <div key={s.label} style={{ flex: 1, textAlign: 'center', background: s.color + '12', borderRadius: 8, padding: '6px 4px', cursor: 'default' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.count}</div>
@@ -592,6 +596,7 @@ const CalendarWidget = ({ rappels, onDayClick }) => {
 
 // ─── Dashboard principal ──────────────────────────────────────────────────────
 export default function Dashboard({ setPage }) {
+  const { langue, t } = useI18n();
   const currentYear = String(new Date().getFullYear());
   const calendarSectionRef = useRef(null);
 
@@ -676,7 +681,7 @@ export default function Dashboard({ setPage }) {
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '50vh' }}>
-      <div style={{ color: COLORS.blue, fontFamily: 'Syne', fontSize: 18, fontWeight: 700 }}>Chargement de l'interface...</div>
+      <div style={{ color: COLORS.blue, fontFamily: 'Syne', fontSize: 18, fontWeight: 700 }}>{t('dash_loading')}</div>
     </div>
   );
 
@@ -722,7 +727,7 @@ export default function Dashboard({ setPage }) {
           <svg style={{ position: 'absolute', left: 14, top: 12, color: '#8a94a6' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder={langue === 'en' ? 'Search...' : 'Rechercher...'} value={search} onChange={e => setSearch(e.target.value)}
             style={{ width: '100%', padding: '10px 16px 10px 40px', borderRadius: '50px', border: '1px solid #eaebef', background: 'white', outline: 'none', color: '#1d2129' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -737,7 +742,7 @@ export default function Dashboard({ setPage }) {
                 }
                 setPage('rappels');
               }}
-              title={todaysAppointments.length > 0 ? 'Notifications du jour' : 'Voir les rappels'}
+              title={todaysAppointments.length > 0 ? (langue === 'en' ? 'Today notifications' : 'Notifications du jour') : (langue === 'en' ? 'View reminders' : 'Voir les rappels')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -841,10 +846,10 @@ Voir le calendrier
       {/* ── KPI CARDS ── */}
       <div className="stats-grid" style={{ gap: 16 }}>
         {[
-          { icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>, label: 'Total Patients',     val: stats.totalPatients,         page: 'patients' },
-          { icon: <><path d="M12 2l-2 2 4 4 2-2-4-4z" /><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z" /><line x1="14" y1="10" x2="4" y2="20" /></>,  label: 'Total Vaccinations', val: stats.totalVaccinations,     page: 'vaccinations' },
-          { icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>, label: 'Upcoming Appt.',     val: stats.rappelsProchains,      page: 'rappels' },
-          { icon: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>,                 label: 'Overdue Alerts',    val: stats.vaccinationsEnRetard, page: 'rappels', danger: true },
+          { icon: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>, label: t('dash_kpi_patients'),     val: stats.totalPatients,         page: 'patients' },
+          { icon: <><path d="M12 2l-2 2 4 4 2-2-4-4z" /><path d="M10 4L2 12l2 2-2 2 2 2 2-2 2 2 8-8-8-8z" /><line x1="14" y1="10" x2="4" y2="20" /></>,  label: t('dash_kpi_vaccinations'), val: stats.totalVaccinations,     page: 'vaccinations' },
+          { icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>, label: t('dash_kpi_upcoming'),     val: stats.rappelsProchains,      page: 'rappels' },
+          { icon: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>,                 label: t('dash_kpi_overdue'),    val: stats.vaccinationsEnRetard, page: 'rappels', danger: true },
         ].map((c, i) => (
           <div key={i} className="stat-card" style={{ padding: '16px', position: 'relative', overflow: 'hidden', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', cursor: 'pointer' }} onClick={() => setPage(c.page)}>
             <div className="stat-header">
@@ -854,7 +859,7 @@ Voir le calendrier
               <div className="stat-label">{c.label}</div>
             </div>
             <div className="stat-value" style={{ color: c.danger && stats.vaccinationsEnRetard > 0 ? COLORS.red : undefined }}>{c.val}</div>
-            <div className="stat-footer">Last Update : {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+            <div className="stat-footer"> : {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
           </div>
         ))}
       </div>
@@ -864,7 +869,7 @@ Voir le calendrier
         {/* Graphique vaccinations */}
         <div className="card" style={{ padding: '16px', border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Vaccination Statistics</h3>
+            <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{t('dash_stat_title')}</h3>
             <div style={{ display: 'flex', gap: 12 }}>
               <select style={{ padding: '6px 16px', borderRadius: '20px', border: '1px solid #eaebef', fontSize: 13, background: 'white', color: '#1d2129' }}>
                 <option>Jan - Déc</option>
@@ -904,7 +909,7 @@ Voir le calendrier
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr 1.4fr', gap: 16, marginTop: 20 }}>
 
         {/* Répartition par sexe */}
-        <SectionCard title="Répartition par sexe">
+        <SectionCard title={t('dash_sex_dist')}>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <PieChart width={160} height={160}>
               <Pie data={sexeData} dataKey="value" cx="50%" cy="50%" innerRadius={42} outerRadius={68} paddingAngle={3}>
@@ -930,7 +935,7 @@ Voir le calendrier
         </SectionCard>
 
         {/* Tranches d'âge */}
-        <SectionCard title="Patients par tranche d'âge">
+        <SectionCard title={t('dash_age_dist')}>
           <ResponsiveContainer width="100%" height={190}>
             <BarChart data={ageData} margin={{ left: -20, right: 4, bottom: 0 }}>
               <XAxis dataKey="tranche" axisLine={false} tickLine={false} tick={{ fill: '#8a94a6', fontSize: 10 }} />
@@ -945,7 +950,7 @@ Voir le calendrier
         </SectionCard>
 
         {/* Types de vaccination */}
-        <SectionCard title="Types de vaccination">
+        <SectionCard title={t('dash_type_dist')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {typeData.length === 0
               ? <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
@@ -971,21 +976,21 @@ Voir le calendrier
       {/* ── LIGNE 2 : Top vaccins + Top wilayas + Statuts ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1.4fr 1fr', gap: 16, marginTop: 16 }}>
 
-        <SectionCard title="Top vaccins administrés">
+        <SectionCard title={t('dash_top_vac')}>
           {topVaccins.length === 0
             ? <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
             : topVaccins.map((v, i) => <ProgressBar key={i} label={v.vaccin} value={v.count} max={maxVaccin} color={CHART_COLORS[i % CHART_COLORS.length]} rank={i + 1} />)
           }
         </SectionCard>
 
-        <SectionCard title="Patients par wilaya">
+        <SectionCard title={t('dash_top_wilaya')}>
           {topWilayas.length === 0
             ? <div style={{ textAlign: 'center', color: '#8a94a6', fontSize: 12, padding: '40px 0' }}>Aucune donnée</div>
             : topWilayas.map((w, i) => <ProgressBar key={i} label={w.wilaya} value={w.count} max={maxWilaya} color={COLORS.teal} rank={i + 1} />)
           }
         </SectionCard>
 
-        <SectionCard title="Statuts">
+        <SectionCard title={t('dash_status')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {statutData.map((s, i) => {
               const color = s.statut === 'complete' ? COLORS.green : s.statut === 'en_cours' ? COLORS.blue : COLORS.amber;
@@ -1033,22 +1038,22 @@ Voir le calendrier
       {/* ── TABLE UPCOMING ── */}
       <div className="card" style={{ border: 'none', padding: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', marginTop: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>Upcoming Consultations</h3>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 18 }}>{langue === 'en' ? 'Upcoming Consultations' : 'Consultations a venir'}</h3>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <svg style={{ position: 'absolute', left: 14, top: 10, color: '#8a94a6' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-              <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" placeholder={langue === 'en' ? 'Search...' : 'Rechercher...'} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ padding: '8px 16px 8px 36px', borderRadius: '50px', border: '1px solid #eaebef', background: 'white', outline: 'none', fontSize: 13 }} />
             </div>
             <div style={{ position: 'relative' }}>
               <button onClick={e => { e.stopPropagation(); setTableFilterOpen(o => !o); }}
                 style={{ background: COLORS.blue, color: 'white', border: 'none', padding: '8px 20px', borderRadius: '50px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
-                {tableStatusFilter === 'all' ? 'Filter' : tableStatusFilter === 'urgent' ? 'Urgent' : tableStatusFilter === 'overdue' ? 'En retard' : 'À venir'}
+                {tableStatusFilter === 'all' ? (langue === 'en' ? 'Filter' : 'Filtrer') : tableStatusFilter === 'urgent' ? 'Urgent' : tableStatusFilter === 'overdue' ? (langue === 'en' ? 'Overdue' : 'En retard') : (langue === 'en' ? 'Upcoming' : 'A venir')}
               </button>
               {tableFilterOpen && (
                 <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 180, background: 'white', border: '1px solid #eaebef', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.10)', overflow: 'hidden', zIndex: 10 }}>
-                  {[{ id: 'all', label: 'Tous' }, { id: 'upcoming', label: 'À venir' }, { id: 'urgent', label: 'Urgent' }, { id: 'overdue', label: 'En retard' }].map(opt => (
+                  {[{ id: 'all', label: langue === 'en' ? 'All' : 'Tous' }, { id: 'upcoming', label: langue === 'en' ? 'Upcoming' : 'A venir' }, { id: 'urgent', label: 'Urgent' }, { id: 'overdue', label: langue === 'en' ? 'Overdue' : 'En retard' }].map(opt => (
                     <button key={opt.id} onClick={() => { setTableStatusFilter(opt.id); setTableFilterOpen(false); }}
                       style={{ width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: tableStatusFilter === opt.id ? COLORS.blue + '12' : 'white', color: tableStatusFilter === opt.id ? COLORS.blue : '#1d2129', fontSize: 12, fontWeight: tableStatusFilter === opt.id ? 700 : 500, cursor: 'pointer' }}>
                       {opt.label}
@@ -1061,12 +1066,12 @@ Voir le calendrier
         </div>
 
         {tableRappels.length === 0
-          ? <div style={{ textAlign: 'center', padding: '40px', color: '#8a94a6' }}>No upcoming appointments found.</div>
+          ? <div style={{ textAlign: 'center', padding: '40px', color: '#8a94a6' }}>{langue === 'en' ? 'No upcoming appointments found.' : 'Aucun rendez-vous a venir.'}</div>
           : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ color: '#8a94a6', borderBottom: '1px solid #eaebef' }}>
-                  {['Patient Name', 'Vaccine', 'Mobile Number', 'Appointment', 'Status', 'Action'].map(h => (
+                  {(langue === 'en' ? ['Patient Name', 'Vaccine', 'Mobile Number', 'Appointment', 'Status', 'Action'] : ['Nom du patient', 'Vaccin', 'Telephone', 'Rendez-vous', 'Statut', 'Action']).map(h => (
                     <th key={h} style={{ padding: '16px 8px', textAlign: 'left', fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
@@ -1074,7 +1079,7 @@ Voir le calendrier
               <tbody>
                 {tableRappels.map((r, i) => {
                   const sColor = r.enRetard ? COLORS.red : r.urgent ? COLORS.amber : COLORS.blue;
-                  const sLabel = r.enRetard ? 'En retard' : r.urgent ? 'Urgent' : 'À venir';
+                  const sLabel = r.enRetard ? (langue === 'en' ? 'Overdue' : 'En retard') : r.urgent ? 'Urgent' : (langue === 'en' ? 'Upcoming' : 'A venir');
                   return (
                     <tr key={r.id} style={{ borderBottom: i < tableRappels.length - 1 ? '1px solid #eaebef' : 'none' }}>
                       <td style={{ padding: '16px 8px' }}>
@@ -1095,7 +1100,7 @@ Voir le calendrier
                       </td>
                       <td style={{ padding: '16px 8px' }}>
                         <button onClick={() => setPage('rappels')} style={{ background: 'white', border: '1px solid #eaebef', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#1d2129' }}>
-                          View Details
+                          {langue === 'en' ? 'View Details' : 'Voir details'}
                         </button>
                       </td>
                     </tr>
@@ -1109,3 +1114,5 @@ Voir le calendrier
     </div>
   );
 }
+
+

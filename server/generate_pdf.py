@@ -266,6 +266,33 @@ def fill_card(payload: dict) -> bytes:
     # Date péremption vaccin (top=308)
     draw_text(133, 314, var_perem, size=8.5, max_width=150)
 
+    # Tableau ZAGREB / ESSEN (rage cellulaire — page 2)
+    if vtype == 'rage' and var_type == 'cellulaire':
+        dates_var = proto.get('datesVAR', {}) or {}
+        protocole = proto.get('cellulProtocole', 'ESSEN')
+
+        if protocole == 'ZAGREB':
+            dose_map = {
+                'J0 (2 sites)': (394, 300),
+                'J7': (394, 336),
+                'J21': (394, 304),
+                'Rappel (J90)': (394, 280),
+            }
+        else:
+            dose_map = {
+                'J0': (488, 300),
+                'J3': (488, 354),
+                'J7': (488, 336),
+                'J14': (488, 320),
+                'J28': (488, 304),
+            }
+
+        for label, date_val in dates_var.items():
+            coord = dose_map.get(label)
+            if coord and date_val:
+                x, y = coord
+                draw_text(x, y, fmt_date(date_val), size=7.5, max_width=85)
+
     # Vaccin antitétanique - Non by default (top=333 area)
     # Circles at ~x=182 (Oui) and ~x=228 (Non), y=348
     draw_filled_circle(c, 228, PDF_H - 348, r=4)

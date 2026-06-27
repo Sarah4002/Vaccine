@@ -15,6 +15,11 @@ let mainWindow;
 let backendStarted = false;
 const bootLogPath = path.join(os.tmpdir(), 'vaccitrack-electron.log');
 let devLoadRetries = 0;
+const singleInstanceLock = app.requestSingleInstanceLock();
+
+if (!singleInstanceLock) {
+  app.quit();
+}
 
 function loadDevApp() {
   const devUrl = 'http://localhost:3000';
@@ -39,6 +44,7 @@ function startBackend() {
 
   process.env.VACCITRACK_DATA_DIR = dataDir;
   process.env.PORT = process.env.PORT || '3001';
+  process.env.VACCITRACK_ALLOW_PORT_CONFLICT = '1';
 
   writeBootLog(`starting backend with data dir: ${dataDir}`);
   try {
@@ -113,6 +119,14 @@ app.whenReady().then(() => {
   }
 }).catch((error) => {
   writeBootLog(`whenReady error: ${error.stack || error.message}`);
+});
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
 });
 
 process.on('uncaughtException', (error) => {

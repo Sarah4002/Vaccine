@@ -193,10 +193,6 @@ const translations = {
     sup_contacts: 'Contacts Dédiés',
     sup_ticket_created: 'Ticket créé ! Nous reviendrons vers vous rapidement.',
     sup_connection_error: 'Erreur de connexion',
-    sup_chat_welcome: 'Bonjour ! Comment puis-je vous aider avec VacciTrack ?',
-    sup_chat_reply: "Merci ! Un agent technique va vous répondre dans quelques instants.",
-    sup_chat_title: 'Support Live VacciTrack',
-    sup_chat_placeholder: 'Écrivez votre message...',
 
     // Help
     help_title: "Centre d'Aide",
@@ -212,8 +208,7 @@ const translations = {
     help_thanks: 'Merci pour votre retour !',
     help_quick_links: 'Liens rapides',
     help_expert: 'Expert en ligne',
-    help_expert_desc: 'Une question complexe ? Chattez avec un spécialiste.',
-    help_start_chat: 'Démarrer le Chat',
+    help_expert_desc: 'Une question complexe ? Contactez directement le support.',
 
     // Login
     login_title: 'Connexion',
@@ -405,10 +400,6 @@ const translations = {
     sup_contacts: 'Dedicated Contacts',
     sup_ticket_created: 'Ticket created! We will get back to you soon.',
     sup_connection_error: 'Connection error',
-    sup_chat_welcome: 'Hello! How can I help you with VacciTrack?',
-    sup_chat_reply: 'Thank you! A technical agent will respond shortly.',
-    sup_chat_title: 'VacciTrack Live Support',
-    sup_chat_placeholder: 'Write your message...',
 
     help_title: 'Help Center',
     help_subtitle: 'Immediate solutions for hospital staff',
@@ -423,8 +414,7 @@ const translations = {
     help_thanks: 'Thanks for your feedback!',
     help_quick_links: 'Quick Links',
     help_expert: 'Expert online',
-    help_expert_desc: 'Complex question? Chat with a specialist.',
-    help_start_chat: 'Start Chat',
+    help_expert_desc: 'Complex question? Contact support directly.',
 
     login_title: 'Login',
     login_email: 'Email address',
@@ -615,10 +605,6 @@ const translations = {
     sup_contacts: 'جهات اتصال مخصصة',
     sup_ticket_created: 'تم إنشاء التذكرة! سنعود إليك قريبًا.',
     sup_connection_error: 'خطأ في الاتصال',
-    sup_chat_welcome: 'مرحبًا! كيف يمكنني مساعدتك مع VacciTrack؟',
-    sup_chat_reply: 'شكرًا! سيرد عليك وكيل فني قريبًا.',
-    sup_chat_title: 'دعم VacciTrack المباشر',
-    sup_chat_placeholder: 'اكتب رسالتك...',
 
     help_title: 'مركز المساعدة',
     help_subtitle: 'حلول فورية لموظفي المستشفى',
@@ -633,8 +619,7 @@ const translations = {
     help_thanks: 'شكرًا لملاحظاتك!',
     help_quick_links: 'روابط سريعة',
     help_expert: 'خبير متصل',
-    help_expert_desc: 'سؤال معقد؟ تحدث مع متخصص.',
-    help_start_chat: 'بدء المحادثة',
+    help_expert_desc: 'سؤال معقد؟ تواصل مباشرة مع الدعم.',
 
     login_title: 'تسجيل الدخول',
     login_email: 'البريد الإلكتروني',
@@ -647,12 +632,19 @@ const translations = {
 const I18nContext = createContext();
 
 export function I18nProvider({ children }) {
-  const [langue, setLangue] = useState(() => localStorage.getItem('app_langue') || 'fr');
+  const normalizeLangue = (value) => (value === 'en' ? 'en' : 'fr');
+  const [langue, setLangueState] = useState(() => normalizeLangue(localStorage.getItem('app_langue')));
+
+  const setLangue = (value) => {
+    const next = normalizeLangue(value);
+    localStorage.setItem('app_langue', next);
+    setLangueState(next);
+  };
 
   useEffect(() => {
     const check = () => {
-      const stored = localStorage.getItem('app_langue') || 'fr';
-      if (stored !== langue) setLangue(stored);
+      const stored = normalizeLangue(localStorage.getItem('app_langue'));
+      if (stored !== langue) setLangueState(stored);
     };
     const interval = setInterval(check, 500);
     return () => clearInterval(interval);

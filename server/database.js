@@ -1,239 +1,416 @@
-// database.js — SQLite avec better-sqlite3 (synchrone, natif)
-const Database = require('better-sqlite3');
+﻿// database.js - MySQL backend with a synchronous wrapper for the existing code.
 const fs = require('fs');
 const path = require('path');
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
 const DATA_DIR = process.env.VACCITRACK_DATA_DIR || __dirname;
-const DB_PATH = path.join(DATA_DIR, 'vaccitrack.db');
 const JSON_PATH = path.join(DATA_DIR, 'db.json');
 const FALLBACK_JSON_PATH = path.join(__dirname, 'db.json');
 
-let db;
+const MYSQL_CONFIG = {
+  host: process.env.MYSQL_HOST || '127.0.0.1',
+  port: Number(process.env.MYSQL_PORT || 3306),
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '',
+  database: process.env.MYSQL_DATABASE || 'vaccitrack',
+  waitForConnections: true,
+  connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT || 10),
+  multipleStatements: true,
+  dateStrings: true,
+  charset: 'utf8mb4',
+};
 
-function initDB() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+const RESPONSE_BYTES = Number(process.env.MYSQL_SYNC_BUFFER_SIZE || 16 * 1024 * 1024);
 
-  db = new Database(DB_PATH);
+function translateSql(sql) {
+  if (!sql) return sql;
 
-  db.pragma('journal_mode = MEMORY');
-  db.pragma('foreign_keys = ON');
-  db.pragma('synchronous = NORMAL');
-  db.pragma('temp_store = MEMORY');
-  db.pragma('cache_size = -16000');
+  let out = String(sql);
 
-  // ── Patients ──────────────────────────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS patients (
-      id              TEXT PRIMARY KEY,
-      nom             TEXT NOT NULL,
-      prenom          TEXT NOT NULL,
-      dateNaissance   TEXT,
-      age             INTEGER,
-      sexe            TEXT DEFAULT 'M',
-      telephone       TEXT,
-      email           TEXT,
-      adresse         TEXT,
-      wilaya          TEXT,
-      daira           TEXT,
-      commune         TEXT,
-      adressePrecise  TEXT,
-      groupeSanguin   TEXT DEFAULT 'A+',
-      poids           TEXT,
-      fonction        TEXT,
-      service         TEXT,
-      profession      TEXT,
-      instruction     TEXT,
-      createdAt       TEXT NOT NULL
-    )
-  `);
+  out = out.replace(/substr\s*\(/gi, 'SUBSTRING(');
+  out = out.replace(/strftime\('\%Y'\s*,\s*'now'\s*\)/gi, 'YEAR(CURDATE())');
+  out = out.replace(/strftime\('\%Y'\s*,\s*([^)]+?)\)/gi, 'YEAR($1)');
+  out = out.replace(/json_extract\(\s*([^,]+?)\s*,\s*'([^']+)'\s*\)/gi,
+    "JSON_UNQUOTE(JSON_EXTRACT($1, '$2'))");
+  out = out.replace(/\(\s*([^()]+?)\s*\|\|\s*' '\s*\|\|\s*([^()]+?)\s*\)/g,
+    'CONCAT($1, \' \', $2)');
+  out = out.replace(/\bINSERT\s+OR\s+IGNORE\b/gi, 'INSERT IGNORE');
+  out = out.replace(/ON\s+CONFLICT\s*\(\s*id\s*\)\s+DO\s+UPDATE\s+SET\s+[\s\S]*$/i,
+    'ON DUPLICATE KEY UPDATE langue = VALUES(langue), theme = VALUES(theme), notificationsEmail = VALUES(notificationsEmail), notificationsPush = VALUES(notificationsPush), affichageRappels = VALUES(affichageRappels), updatedAt = VALUES(updatedAt)');
 
-  // ── Ajouter colonnes médicales si inexistantes ─────────────────────────────
-  const medicalColumns = [
-    'age',
-    'antecedents',
-    'allergies',
-    'maladiesChroniques',
-    'traitementEnCours',
-    'contreIndications',
-    'fumeur',
-    'alcool',
-    'activitePhysique',
-    'mutuelle',
-    'numeroCNAS',
-    'medecinTraitant',
-    'notesClinicien',
-  ];
+  return out;
+}
 
-  medicalColumns.forEach(col => {
-    try {
-      db.prepare(`ALTER TABLE patients ADD COLUMN ${col} ${col === 'age' ? 'INTEGER' : 'TEXT'}`).run();
-      console.log(`✅ Colonne ajoutée: ${col}`);
-    } catch (err) {
-      // Colonne existe déjà — normal
+function normalizeArgs(args, namedParams) {
+  if (!args || args.length === 0) return [];
+  if (args.length === 1) {
+    const [first] = args;
+    if (Array.isArray(first)) return first;
+    if (first && typeof first === 'object' && !Array.isArray(first)) {
+      if (namedParams && namedParams.length) {
+        return namedParams.map((name) => first[name]);
+      }
+      return first;
     }
+    return [first];
+  }
+  return args;
+}
+
+function compileStatement(sql) {
+  const translated = translateSql(sql);
+  const namedParams = [];
+  const finalSql = translated.replace(/@([A-Za-z_][A-Za-z0-9_]*)/g, (_, name) => {
+    namedParams.push(name);
+    return '?';
   });
+  return { sql: finalSql, namedParams };
+}
 
-  try {
-    db.prepare('ALTER TABLE support_tickets ADD COLUMN updatedAt TEXT').run();
-  } catch (err) {
-    // Colonne existe deja ou table absente avant creation
+function createSyncBufferClient(worker) {
+  const signal = new Int32Array(new SharedArrayBuffer(8));
+  const data = new Uint8Array(new SharedArrayBuffer(RESPONSE_BYTES));
+  const decoder = new TextDecoder();
+
+  function call(action, payload = {}) {
+    Atomics.store(signal, 0, 0);
+    Atomics.store(signal, 1, 0);
+    worker.postMessage({ action, payload, signalBuffer: signal.buffer, dataBuffer: data.buffer });
+    Atomics.wait(signal, 0, 0);
+
+    const status = Atomics.load(signal, 0);
+    const length = Atomics.load(signal, 1);
+    const text = length > 0 ? decoder.decode(data.subarray(0, length)) : '';
+    const parsed = text ? JSON.parse(text) : null;
+
+    if (status !== 1) {
+      throw new Error(parsed?.error || text || 'MySQL request failed');
+    }
+
+    return parsed;
   }
 
-  // ── Vaccinations ──────────────────────────────────────────────────────────
-  db.exec(`
+  return call;
+}
+
+function buildSchema() {
+  return `
+    CREATE TABLE IF NOT EXISTS patients (
+      id VARCHAR(64) PRIMARY KEY,
+      nom VARCHAR(255) NOT NULL,
+      prenom VARCHAR(255) NOT NULL,
+      dateNaissance VARCHAR(32),
+      age INT NULL,
+      sexe VARCHAR(8) DEFAULT 'M',
+      telephone VARCHAR(64),
+      email VARCHAR(255),
+      adresse TEXT,
+      wilaya VARCHAR(128),
+      daira VARCHAR(128),
+      commune VARCHAR(128),
+      adressePrecise TEXT,
+      groupeSanguin VARCHAR(8) DEFAULT 'A+',
+      poids VARCHAR(32),
+      fonction VARCHAR(255),
+      service VARCHAR(255),
+      profession VARCHAR(255),
+      instruction VARCHAR(255),
+      antecedents TEXT,
+      allergies TEXT,
+      maladiesChroniques TEXT,
+      traitementEnCours TEXT,
+      contreIndications TEXT,
+      fumeur TEXT,
+      alcool TEXT,
+      activitePhysique TEXT,
+      mutuelle TEXT,
+      numeroCNAS VARCHAR(64),
+      medecinTraitant VARCHAR(255),
+      notesClinicien TEXT,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_patients_createdAt (createdAt),
+      INDEX idx_patients_nom_prenom_sexe (nom, prenom, sexe),
+      INDEX idx_patients_wilaya (wilaya),
+      INDEX idx_patients_nom (nom),
+      INDEX idx_patients_prenom (prenom),
+      INDEX idx_patients_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
     CREATE TABLE IF NOT EXISTS vaccinations (
-      id                 TEXT PRIMARY KEY,
-      patientId          TEXT NOT NULL,
-      type               TEXT,
-      vaccin             TEXT,
-      dose               TEXT,
-      statut             TEXT DEFAULT 'complete',
-      dateAdministration TEXT,
-      dateProchaineDose  TEXT,
-      protocoleData      TEXT,
-      createdAt          TEXT NOT NULL,
-      FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      patientId VARCHAR(64) NOT NULL,
+      type VARCHAR(64),
+      vaccin VARCHAR(255),
+      dose VARCHAR(64),
+      statut VARCHAR(32) DEFAULT 'complete',
+      dateAdministration VARCHAR(32),
+      dateProchaineDose VARCHAR(32),
+      protocoleData TEXT,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_vaccinations_patientId_date (patientId, dateAdministration),
+      INDEX idx_vaccinations_type_date (type, dateAdministration),
+      INDEX idx_vaccinations_dateProchaineDose (dateProchaineDose),
+      INDEX idx_vaccinations_createdAt (createdAt),
+      CONSTRAINT fk_vaccinations_patient
+        FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  // ── Ordonnances ───────────────────────────────────────────────────────────
-  db.exec(`
     CREATE TABLE IF NOT EXISTS ordonnances (
-      id           TEXT PRIMARY KEY,
-      patientId    TEXT NOT NULL,
-      date         TEXT,
-      medecin      TEXT,
-      diagnostic   TEXT,
+      id VARCHAR(64) PRIMARY KEY,
+      patientId VARCHAR(64) NOT NULL,
+      date VARCHAR(32),
+      medecin VARCHAR(255),
+      diagnostic TEXT,
       observations TEXT,
-      medicaments  TEXT,
-      createdAt    TEXT NOT NULL,
-      FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
-    )
-  `);
+      medicaments TEXT,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_ordonnances_patientId_createdAt (patientId, createdAt),
+      CONSTRAINT fk_ordonnances_patient
+        FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  // ── Stocks ────────────────────────────────────────────────────────────────
-  db.exec(`
     CREATE TABLE IF NOT EXISTS stocks (
-      id               TEXT PRIMARY KEY,
-      vaccin           TEXT NOT NULL,
-      lot              TEXT,
-      quantiteInitiale INTEGER DEFAULT 0,
-      quantiteRestante INTEGER DEFAULT 0,
-      datePeremption   TEXT
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      vaccin VARCHAR(255) NOT NULL,
+      lot VARCHAR(255),
+      quantiteInitiale INT DEFAULT 0,
+      quantiteRestante INT DEFAULT 0,
+      datePeremption VARCHAR(32),
+      INDEX idx_stocks_vaccin (vaccin),
+      INDEX idx_stocks_datePeremption (datePeremption)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  db.exec(`
     CREATE TABLE IF NOT EXISTS stock_movements (
-      id        TEXT PRIMARY KEY,
-      stockId   TEXT NOT NULL,
-      type      TEXT NOT NULL,
-      quantite  INTEGER DEFAULT 0,
-      patientId TEXT,
-      motif     TEXT,
-      createdAt TEXT NOT NULL,
-      FOREIGN KEY (stockId) REFERENCES stocks(id) ON DELETE CASCADE,
-      FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE SET NULL
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      stockId VARCHAR(64) NOT NULL,
+      type VARCHAR(32) NOT NULL,
+      quantite INT DEFAULT 0,
+      patientId VARCHAR(64) NULL,
+      motif TEXT,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_stock_movements_stockId_createdAt (stockId, createdAt),
+      CONSTRAINT fk_stock_movements_stock
+        FOREIGN KEY (stockId) REFERENCES stocks(id) ON DELETE CASCADE,
+      CONSTRAINT fk_stock_movements_patient
+        FOREIGN KEY (patientId) REFERENCES patients(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  db.exec(`
     CREATE TABLE IF NOT EXISTS app_settings (
-      id                 TEXT PRIMARY KEY,
-      langue             TEXT DEFAULT 'fr',
-      theme              TEXT DEFAULT 'light',
-      notificationsEmail INTEGER DEFAULT 1,
-      notificationsPush  INTEGER DEFAULT 1,
-      affichageRappels   INTEGER DEFAULT 1,
-      updatedAt          TEXT NOT NULL
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      langue VARCHAR(32) DEFAULT 'fr',
+      theme VARCHAR(32) DEFAULT 'light',
+      notificationsEmail TINYINT(1) DEFAULT 1,
+      notificationsPush TINYINT(1) DEFAULT 1,
+      affichageRappels TINYINT(1) DEFAULT 1,
+      updatedAt VARCHAR(32) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  db.exec(`
     CREATE TABLE IF NOT EXISTS support_tickets (
-      id           TEXT PRIMARY KEY,
-      titre        TEXT NOT NULL,
-      description  TEXT NOT NULL,
-      categorie    TEXT,
-      priorite     TEXT DEFAULT 'normal',
-      statut       TEXT DEFAULT 'ouvert',
-      createdAt    TEXT NOT NULL
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      titre VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      categorie VARCHAR(255),
+      priorite VARCHAR(32) DEFAULT 'normal',
+      statut VARCHAR(32) DEFAULT 'ouvert',
+      createdAt VARCHAR(32) NOT NULL,
+      updatedAt VARCHAR(32),
+      INDEX idx_support_tickets_createdAt (createdAt)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  try {
-    db.prepare('ALTER TABLE support_tickets ADD COLUMN updatedAt TEXT').run();
-  } catch (err) {
-    // Colonne existe deja
-  }
-
-  db.exec(`
     CREATE TABLE IF NOT EXISTS help_articles (
-      id           TEXT PRIMARY KEY,
-      titre        TEXT NOT NULL,
-      categorie    TEXT NOT NULL,
-      contenu      TEXT NOT NULL,
-      createdAt    TEXT NOT NULL
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      titre VARCHAR(255) NOT NULL,
+      categorie VARCHAR(255) NOT NULL,
+      contenu TEXT NOT NULL,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_help_articles_categorie (categorie)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-  db.exec(`
     CREATE TABLE IF NOT EXISTS help_feedback (
-      id           TEXT PRIMARY KEY,
-      articleId    TEXT NOT NULL,
-      feedbackType TEXT NOT NULL,
-      createdAt    TEXT NOT NULL,
-      FOREIGN KEY (articleId) REFERENCES help_articles(id) ON DELETE CASCADE
-    )
-  `);
+      id VARCHAR(64) PRIMARY KEY,
+      articleId VARCHAR(64) NOT NULL,
+      feedbackType VARCHAR(64) NOT NULL,
+      createdAt VARCHAR(32) NOT NULL,
+      INDEX idx_help_feedback_articleId (articleId),
+      CONSTRAINT fk_help_feedback_article
+        FOREIGN KEY (articleId) REFERENCES help_articles(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `;
+}
 
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_patients_createdAt ON patients(createdAt DESC);
-    CREATE INDEX IF NOT EXISTS idx_patients_nom_prenom_sexe ON patients(nom, prenom, sexe);
-    CREATE INDEX IF NOT EXISTS idx_patients_wilaya ON patients(wilaya);
-    CREATE INDEX IF NOT EXISTS idx_patients_lower_nom ON patients(lower(nom));
-    CREATE INDEX IF NOT EXISTS idx_patients_lower_prenom ON patients(lower(prenom));
-    CREATE INDEX IF NOT EXISTS idx_patients_lower_email ON patients(lower(email));
+function workerMain() {
+  const mysql = require('mysql2/promise');
+  const encoder = new TextEncoder();
+  const config = workerData?.config || MYSQL_CONFIG;
 
-    CREATE INDEX IF NOT EXISTS idx_vaccinations_patientId_date ON vaccinations(patientId, dateAdministration DESC);
-    CREATE INDEX IF NOT EXISTS idx_vaccinations_type_date ON vaccinations(type, dateAdministration DESC);
-    CREATE INDEX IF NOT EXISTS idx_vaccinations_dateProchaineDose ON vaccinations(dateProchaineDose);
-    CREATE INDEX IF NOT EXISTS idx_vaccinations_createdAt ON vaccinations(createdAt DESC);
-
-    CREATE INDEX IF NOT EXISTS idx_ordonnances_patientId_createdAt ON ordonnances(patientId, createdAt DESC);
-    CREATE INDEX IF NOT EXISTS idx_stocks_vaccin ON stocks(vaccin);
-    CREATE INDEX IF NOT EXISTS idx_stocks_datePeremption ON stocks(datePeremption);
-    CREATE INDEX IF NOT EXISTS idx_stock_movements_stockId_createdAt ON stock_movements(stockId, createdAt DESC);
-    CREATE INDEX IF NOT EXISTS idx_support_tickets_createdAt ON support_tickets(createdAt DESC);
-    CREATE INDEX IF NOT EXISTS idx_help_articles_categorie ON help_articles(categorie);
-    CREATE INDEX IF NOT EXISTS idx_help_feedback_articleId ON help_feedback(articleId);
-  `);
-
-  // ── Migration depuis db.json ou seed ──────────────────────────────────────
-  const count = db.prepare('SELECT COUNT(*) as n FROM patients').get().n;
-  if (count === 0 && (fs.existsSync(JSON_PATH) || fs.existsSync(FALLBACK_JSON_PATH))) {
-    migrateFromJSON();
-  } else if (count === 0) {
-    
+  function writeResponse(signalBuffer, dataBuffer, status, payload) {
+    const signal = new Int32Array(signalBuffer);
+    const data = new Uint8Array(dataBuffer);
+    const body = encoder.encode(JSON.stringify(payload ?? null));
+    if (body.length > data.length) {
+      throw new Error('MySQL response exceeded sync buffer size');
+    }
+    data.fill(0);
+    data.set(body, 0);
+    Atomics.store(signal, 1, body.length);
+    Atomics.store(signal, 0, status);
+    Atomics.notify(signal, 0, 1);
   }
 
-  seedSystemTables();
+  (async () => {
+    const pool = mysql.createPool(config);
+    const sessions = new Map();
+    let nextSessionId = 1;
 
-  console.log(`✅ SQLite initialisé: ${DB_PATH}`);
+    parentPort.on('message', async (message) => {
+      const { action, payload = {}, signalBuffer, dataBuffer } = message;
+
+      try {
+        let result = null;
+
+        if (action === 'ping') {
+          result = { ok: true };
+        } else if (action === 'begin') {
+          const conn = await pool.getConnection();
+          await conn.beginTransaction();
+          const sessionId = nextSessionId++;
+          sessions.set(sessionId, conn);
+          result = { sessionId };
+        } else if (action === 'commit' || action === 'rollback') {
+          const conn = sessions.get(payload.sessionId);
+          if (!conn) throw new Error(`Unknown MySQL transaction session: ${payload.sessionId}`);
+          if (action === 'commit') await conn.commit();
+          else await conn.rollback();
+          conn.release();
+          sessions.delete(payload.sessionId);
+          result = { ok: true };
+        } else if (action === 'query' || action === 'execute' || action === 'exec') {
+          const compiled = compileStatement(payload.sql || '');
+          const conn = payload.sessionId ? sessions.get(payload.sessionId) : null;
+          if (payload.sessionId && !conn) {
+            throw new Error(`Unknown MySQL transaction session: ${payload.sessionId}`);
+          }
+
+          const params = payload.params ?? [];
+          const executor = conn || pool;
+          const [rowsOrResult] = await executor.query(compiled.sql, params);
+
+          if (action === 'query') {
+            result = { rows: Array.isArray(rowsOrResult) ? rowsOrResult : [] };
+          } else {
+            result = {
+              result: {
+                affectedRows: rowsOrResult?.affectedRows ?? 0,
+                insertId: rowsOrResult?.insertId ?? 0,
+                changedRows: rowsOrResult?.changedRows ?? 0,
+              },
+            };
+          }
+        } else {
+          throw new Error(`Unknown action: ${action}`);
+        }
+
+        writeResponse(signalBuffer, dataBuffer, 1, result);
+      } catch (error) {
+        writeResponse(signalBuffer, dataBuffer, 2, { error: error?.message || String(error) });
+      }
+    });
+  })().catch((error) => {
+    parentPort.postMessage({ fatal: true, error: error?.message || String(error) });
+  });
+}
+
+function createDBClient() {
+  const worker = new Worker(__filename, {
+    workerData: { role: 'mysql-worker' },
+  });
+  const call = createSyncBufferClient(worker);
+
+  call('ping');
+
+  let activeSessionId = null;
+
+  const db = {
+    exec(sql) {
+      return call('exec', {
+        sql,
+        sessionId: activeSessionId,
+      });
+    },
+    pragma() {
+      return null;
+    },
+    prepare(sql) {
+      const statement = compileStatement(sql);
+      return {
+        get: (...args) => {
+          const params = normalizeArgs(args, statement.namedParams);
+          const response = call('query', {
+            sql: statement.sql,
+            params,
+            sessionId: activeSessionId,
+          });
+          return response?.rows?.[0] ?? null;
+        },
+        all: (...args) => {
+          const params = normalizeArgs(args, statement.namedParams);
+          const response = call('query', {
+            sql: statement.sql,
+            params,
+            sessionId: activeSessionId,
+          });
+          return response?.rows || [];
+        },
+        run: (...args) => {
+          const params = normalizeArgs(args, statement.namedParams);
+          return call('execute', {
+            sql: statement.sql,
+            params,
+            sessionId: activeSessionId,
+          });
+        },
+      };
+    },
+    transaction(fn) {
+      return (...args) => {
+        if (activeSessionId !== null) {
+          return fn(...args);
+        }
+
+        const { sessionId } = call('begin');
+        activeSessionId = sessionId;
+        try {
+          const result = fn(...args);
+          call('commit', { sessionId });
+          return result;
+        } catch (error) {
+          try {
+            call('rollback', { sessionId });
+          } catch {
+            // Ignore rollback failures so the original error is preserved.
+          }
+          throw error;
+        } finally {
+          activeSessionId = null;
+        }
+      };
+    },
+    close() {
+      worker.terminate().catch(() => {});
+    },
+  };
+
   return db;
 }
 
-// ── Migration depuis JSON ─────────────────────────────────────────────────
-function migrateFromJSON() {
-  console.log('📦 Migration db.json → SQLite...');
+function migrateFromJSON(db) {
+  console.log('Migration db.json -> MySQL...');
   try {
     const sourceJsonPath = fs.existsSync(JSON_PATH) ? JSON_PATH : FALLBACK_JSON_PATH;
     const raw = JSON.parse(fs.readFileSync(sourceJsonPath, 'utf8'));
 
     const patientStmt = db.prepare(`
-      INSERT OR IGNORE INTO patients
+      INSERT IGNORE INTO patients
       (id,nom,prenom,dateNaissance,age,sexe,telephone,email,adresse,wilaya,daira,commune,
        adressePrecise,groupeSanguin,poids,fonction,service,profession,instruction,
        antecedents,allergies,maladiesChroniques,traitementEnCours,contreIndications,
@@ -248,17 +425,27 @@ function migrateFromJSON() {
     `);
 
     const transaction = db.transaction(() => {
-      (raw.patients || []).forEach(p => {
+      (raw.patients || []).forEach((p) => {
         patientStmt.run({
-          id: p.id, nom: p.nom, prenom: p.prenom,
-          dateNaissance: p.dateNaissance || null, age: p.age ?? null, sexe: p.sexe || 'M',
-          telephone: p.telephone || null, email: p.email || null,
-          adresse: p.adresse || null, wilaya: p.wilaya || null,
-          daira: p.daira || null, commune: p.commune || null,
+          id: p.id,
+          nom: p.nom,
+          prenom: p.prenom,
+          dateNaissance: p.dateNaissance || null,
+          age: p.age ?? null,
+          sexe: p.sexe || 'M',
+          telephone: p.telephone || null,
+          email: p.email || null,
+          adresse: p.adresse || null,
+          wilaya: p.wilaya || null,
+          daira: p.daira || null,
+          commune: p.commune || null,
           adressePrecise: p.adressePrecise || null,
-          groupeSanguin: p.groupeSanguin || 'A+', poids: String(p.poids || ''),
-          fonction: p.fonction || null, service: p.service || null,
-          profession: p.profession || null, instruction: p.instruction || null,
+          groupeSanguin: p.groupeSanguin || 'A+',
+          poids: String(p.poids || ''),
+          fonction: p.fonction || null,
+          service: p.service || null,
+          profession: p.profession || null,
+          instruction: p.instruction || null,
           antecedents: p.antecedents || null,
           allergies: p.allergies || null,
           maladiesChroniques: p.maladiesChroniques || null,
@@ -277,14 +464,13 @@ function migrateFromJSON() {
     });
 
     transaction();
-    console.log(`✅ Migration terminée: ${raw.patients?.length || 0} patients importés`);
-  } catch (err) {
-    console.error('❌ Erreur migration:', err.message);
-    
+    console.log(`Migration terminee: ${raw.patients?.length || 0} patients importes`);
+  } catch (error) {
+    console.error('Erreur migration:', error.message);
   }
 }
 
-function seedSystemTables() {
+function seedSystemTables(db) {
   const now = new Date().toISOString();
 
   const settingsCount = db.prepare('SELECT COUNT(*) as n FROM app_settings').get().n;
@@ -342,12 +528,52 @@ function seedSystemTables() {
   seed();
 }
 
+function initDB() {
+  const bootstrapConfig = {
+    host: MYSQL_CONFIG.host,
+    port: MYSQL_CONFIG.port,
+    user: MYSQL_CONFIG.user,
+    password: MYSQL_CONFIG.password,
+    database: undefined,
+    waitForConnections: true,
+    connectionLimit: 1,
+    multipleStatements: true,
+    dateStrings: true,
+    charset: 'utf8mb4',
+  };
 
+  const bootstrapWorker = new Worker(__filename, {
+    workerData: {
+      role: 'mysql-worker',
+      config: bootstrapConfig,
+    },
+  });
+  const bootstrapCall = createSyncBufferClient(bootstrapWorker);
+  bootstrapCall('ping');
 
-// ── Récupérer DB ──────────────────────────────────────────────────────────
-function getDB() {
-  if (!db) initDB();
+  const dbName = MYSQL_CONFIG.database;
+  bootstrapCall('exec', {
+    sql: `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
+  });
+  bootstrapWorker.terminate().catch(() => {});
+
+  const db = createDBClient();
+  db.exec(buildSchema());
+
+  const countRow = db.prepare('SELECT COUNT(*) as n FROM patients').get() || { n: 0 };
+  const count = Number(countRow.n || 0);
+  if (count === 0 && (fs.existsSync(JSON_PATH) || fs.existsSync(FALLBACK_JSON_PATH))) {
+    migrateFromJSON(db);
+  }
+
+  seedSystemTables(db);
+
+  console.log(`MySQL initialised: ${MYSQL_CONFIG.database} @ ${MYSQL_CONFIG.host}:${MYSQL_CONFIG.port}`);
   return db;
 }
 
-module.exports = { initDB, getDB };
+module.exports = { initDB, getDB: initDB };
+
+if (!isMainThread && workerData?.role === 'mysql-worker') {
+  workerMain();
+}

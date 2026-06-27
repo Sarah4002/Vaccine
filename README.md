@@ -115,18 +115,18 @@ vaccine-app/
 
 ## 🗄️ Base de données
 
-Cette version utilise une **base de données en mémoire** (données pré-chargées).  
-Pour la production, intégrez une vraie base de données :
+Le serveur utilise maintenant **MySQL**.  
+Configurez les variables suivantes dans `server/.env` ou `.env` :
 
-**Option recommandée — SQLite avec better-sqlite3 :**
 ```bash
-npm install better-sqlite3
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=vaccitrack
 ```
 
-**Option cloud — MongoDB Atlas :**
-```bash
-npm install mongoose
-```
+Si la base n'existe pas encore, elle est créée automatiquement au démarrage.
 
 ---
 

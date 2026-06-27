@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import HelpCenter from './pages/HelpCenter';
 import Support from './pages/Support';
 import Login from './pages/Login';
+import { useI18n } from './i18n';
 
 const API = process.env.REACT_APP_API || 'http://localhost:3001';
 
@@ -67,6 +68,7 @@ class PageErrorBoundary extends React.Component {
 }
 
 export default function App() {
+  const { t, setLangue } = useI18n();
   const [page, setPage] = useState('dashboard');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -125,6 +127,7 @@ export default function App() {
     htmlElement.setAttribute('lang', settingsData.langue || 'fr');
     localStorage.setItem('app_theme', settingsData.theme || 'light');
     localStorage.setItem('app_langue', settingsData.langue || 'fr');
+    setLangue(settingsData.langue || 'fr');
   };
 
   useEffect(() => {
@@ -189,10 +192,10 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <img src={logoSrc} alt="CHU Tlemcen" style={{ height: '75px', width: 'auto', display: 'block', marginBottom: '8px' }} />
             <div style={{ color: 'var(--color-text-primary)', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '12px', letterSpacing: '1.5px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-              Service d'Epidemiologie
+              {t('header_service')}
             </div>
             <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '4px', fontWeight: 600 }}>
-              Centre Hospitalo-Universitaire de Tlemcen
+              {t('header_chu')}
             </div>
           </div>
 

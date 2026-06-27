@@ -97,6 +97,8 @@ export const api = {
   // Support
   getTickets: () => request('/support/tickets'),
   createTicket: (data) => request('/support/tickets', { method: 'POST', body: JSON.stringify(data) }),
+  updateTicketStatus: (id, statut) =>
+    request(`/support-tickets/${id}`, { method: 'PUT', body: JSON.stringify({ statut }) }),
 
   // Auth
   login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
