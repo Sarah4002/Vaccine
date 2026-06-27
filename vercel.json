@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/site_web/vaccitrack-download.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/site_web/vaccitrack-download.html"
+    }
+  ]
+}

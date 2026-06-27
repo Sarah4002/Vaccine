@@ -1,528 +1,818 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VacciTrack — Télécharger</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="description" content="Télécharger VacciTrack, la plateforme de suivi vaccinal pour patients, rappels, stocks et certificats PDF.">
+  <title>VacciTrack - Télécharger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:         #040D1A;
-      --bg2:        #071629;
-      --emerald:    #10B981;
-      --emerald-h:  #059669;
-      --emerald-gl: #34D399;
-      --teal:       #0EA5E9;
-      --white:      #FFFFFF;
-      --text-muted: #64748B;
-      --text-sub:   #94A3B8;
-      --text-body:  #CBD5E1;
-      --border:     rgba(255,255,255,0.07);
-      --card-bg:    rgba(255,255,255,0.035);
-      --r-sm: 8px;
-      --r-md: 14px;
-      --r-lg: 22px;
+      --bg: #08111f;
+      --bg-2: #0d1729;
+      --card: rgba(10, 18, 33, 0.74);
+      --card-2: rgba(255, 255, 255, 0.03);
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e5edf8;
+      --muted: #94a3b8;
+      --soft: #cbd5e1;
+      --accent: #0056ff;
+      --accent-2: #4f8cff;
+      --accent-3: #12c2a8;
+      --shadow: 0 24px 90px rgba(0, 0, 0, 0.45);
+      --shadow-soft: 0 12px 40px rgba(0, 86, 255, 0.22);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
     }
 
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--white);
+      margin: 0;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1.25rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 86, 255, 0.16), transparent 34%),
+        radial-gradient(circle at top right, rgba(18, 194, 168, 0.14), transparent 28%),
+        linear-gradient(180deg, #09111d 0%, #050b14 100%);
       overflow-x: hidden;
     }
 
-    /* Grid background */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
+      pointer-events: none;
       background-image:
-        linear-gradient(rgba(16,185,129,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(16,185,129,0.035) 1px, transparent 1px);
-      background-size: 52px 52px;
-      pointer-events: none;
+        linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
+      opacity: .32;
       z-index: 0;
     }
 
-    /* Top glow */
-    .glow-top {
-      position: fixed;
-      top: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 600px;
-      background: radial-gradient(ellipse, rgba(16,185,129,0.12) 0%, transparent 68%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ── HEADER ── */
-    .header {
+    .shell {
       position: relative;
       z-index: 1;
-      text-align: center;
-      margin-bottom: 2.5rem;
-      max-width: 620px;
-    }
-
-    .logo-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 1.25rem;
-    }
-
-    .logo-icon {
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, var(--emerald) 0%, #06B6D4 100%);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), 0 12px 40px rgba(16,185,129,0.35);
-      flex-shrink: 0;
-    }
-    .logo-icon svg { width: 26px; height: 26px; color: #fff; }
-
-    .logo-name {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -.03em;
-    }
-    .logo-name span { color: var(--emerald-gl); }
-
-    .tagline {
-      font-size: 15px;
-      color: var(--text-sub);
-      line-height: 1.65;
-      max-width: 480px;
+      width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
+      padding: 28px 0 36px;
     }
 
-    /* ── MAIN CARD ── */
-    .card {
-      position: relative;
-      z-index: 1;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 2rem;
-      max-width: 620px;
-      width: 100%;
-      backdrop-filter: blur(16px);
-    }
-
-    /* version bar */
-    .version-bar {
+    .topbar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      padding: 14px 18px;
-      margin-bottom: 1.5rem;
-    }
-    .v-left {
-      display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .v-badge {
-      background: rgba(16,185,129,0.15);
-      border: 1px solid rgba(16,185,129,0.3);
-      color: var(--emerald-gl);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 20px;
-      letter-spacing: .04em;
-    }
-    .v-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--white);
-    }
-    .v-date {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    .v-meta {
-      display: flex;
-      gap: 1.25rem;
-    }
-    .v-meta-item {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 1px;
-    }
-    .v-meta-label {
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      font-weight: 600;
-    }
-    .v-meta-value {
-      font-size: 12px;
-      color: var(--text-sub);
-      font-weight: 600;
+      gap: 16px;
+      margin-bottom: 28px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: .02em;
     }
 
-    /* features grid */
-    .features {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 1.5rem;
-    }
-    .feat {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      padding: 14px;
-      display: flex;
-      gap: 11px;
-      align-items: flex-start;
-      transition: border-color .18s, background .18s;
-    }
-    .feat:hover {
-      border-color: rgba(16,185,129,0.2);
-      background: rgba(16,185,129,0.04);
-    }
-    .feat-icon {
-      width: 36px;
-      height: 36px;
-      background: rgba(16,185,129,0.1);
-      border-radius: 9px;
-      display: flex;
+    .brand {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .feat-icon svg { width: 18px; height: 18px; color: var(--emerald-gl); }
-    .feat-body { display: flex; flex-direction: column; gap: 2px; }
-    .feat-title { font-size: 13px; font-weight: 600; color: var(--white); }
-    .feat-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-
-    /* download section */
-    .dl-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .btn-dl {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      background: var(--emerald);
-      color: #fff;
+      gap: 14px;
       text-decoration: none;
-      border-radius: var(--r-md);
-      font-family: 'Inter', sans-serif;
+      color: var(--text);
+    }
+
+    .brand-mark {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, rgba(0, 86, 255, 1), rgba(79, 140, 255, 0.96));
+      box-shadow: 0 14px 36px rgba(0, 86, 255, .32), inset 0 1px 0 rgba(255,255,255,.16);
+    }
+
+    .brand-mark svg { width: 28px; height: 28px; }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .brand-title span { color: #67e8f9; }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      color: var(--soft);
       font-weight: 700;
-      font-size: 15px;
-      transition: background .18s, transform .15s, box-shadow .18s;
-      box-shadow: 0 4px 28px rgba(16,185,129,0.38);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #34d399, #12c2a8);
+      box-shadow: 0 0 0 5px rgba(18, 194, 168, .12);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 26px;
+      align-items: stretch;
+      margin-bottom: 26px;
+    }
+
+    .hero-panel,
+    .aside-panel,
+    .download-card,
+    .feature-card,
+    .stats-card,
+    .support-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero-panel {
+      padding: 36px;
       position: relative;
       overflow: hidden;
     }
-    .btn-dl::after {
-      content:'';
-      position:absolute;
-      inset:0;
-      background: linear-gradient(rgba(255,255,255,0.1), transparent);
+
+    .hero-panel::before,
+    .download-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(0, 86, 255, .2), transparent 30%),
+                  radial-gradient(circle at bottom left, rgba(18, 194, 168, .12), transparent 26%);
       pointer-events: none;
     }
-    .btn-dl:hover {
-      background: var(--emerald-h);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 36px rgba(16,185,129,0.5);
-    }
-    .btn-dl:active { transform: translateY(0); }
-    .btn-dl-left { display: flex; align-items: center; gap: 10px; }
-    .btn-dl svg { width: 20px; height: 20px; flex-shrink: 0; }
-    .btn-dl-right {
-      font-size: 12px;
-      font-weight: 500;
-      opacity: .8;
-      background: rgba(0,0,0,0.15);
-      padding: 4px 10px;
-      border-radius: 6px;
-    }
 
-    .btn-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .btn-alt {
-      display: flex;
+    .eyebrow {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      padding: 13px 16px;
-      background: transparent;
-      color: var(--text-sub);
-      text-decoration: none;
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      transition: border-color .18s, color .18s, background .18s;
-    }
-    .btn-alt:hover {
-      border-color: rgba(255,255,255,0.2);
-      color: var(--white);
-      background: rgba(255,255,255,0.04);
-    }
-    .btn-alt svg { width: 16px; height: 16px; }
-
-    /* security strip */
-    .security {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      margin-top: 1.5rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
-    .sec-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-    .sec-item svg { width: 13px; height: 13px; color: var(--emerald); }
-
-    /* ── FOOTER ── */
-    .footer {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0, 86, 255, .12);
+      border: 1px solid rgba(79, 140, 255, .22);
+      color: #9fc0ff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
       position: relative;
       z-index: 1;
-      margin-top: 2rem;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
     }
-    .footer a { color: var(--emerald-gl); text-decoration: none; }
+
+    h1 {
+      margin: 18px 0 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: .96;
+      letter-spacing: -.06em;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 .accent { color: #67e8f9; }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 60ch;
+      color: var(--soft);
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 800;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.03);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      border-color: rgba(103, 232, 249, .3);
+      background: rgba(255,255,255,.055);
+    }
+
+    .btn svg { width: 18px; height: 18px; }
+
+    .stats-card {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .stats-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .stats-title strong {
+      font-size: 14px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #dbeafe;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(148,163,184,.14);
+    }
+
+    .stat .value {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .stat .hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #b7c8e6;
+    }
+
+    .stat .hint::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #34d399, #12c2a8);
+      box-shadow: 0 0 0 4px rgba(18,194,168,.12);
+    }
+
+    .section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    .feature-card,
+    .download-card,
+    .support-card {
+      padding: 26px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      letter-spacing: -.04em;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .feature {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(148,163,184,.12);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      background: rgba(0, 86, 255, .12);
+      border: 1px solid rgba(79, 140, 255, .18);
+      color: #93c5fd;
+    }
+
+    .feature-icon svg { width: 18px; height: 18px; }
+
+    .feature h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      letter-spacing: -.02em;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .download-meta {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .download-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: 18px;
+    }
+
+    .download-strip small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 6px;
+      font-size: 10px;
+    }
+
+    .download-strip strong {
+      font-size: 16px;
+    }
+
+    .download-strip .meta {
+      text-align: right;
+      color: var(--soft);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .download-callout {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(0, 86, 255, .12), rgba(18, 194, 168, .08));
+      border: 1px solid rgba(103, 232, 249, .14);
+      color: #d6e7ff;
+      font-size: 13px;
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+
+    .download-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .download-note {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .note {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(148,163,184,.12);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .note strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .support-card {
+      margin-bottom: 22px;
+    }
+
+    .support-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .support-item {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(148,163,184,.12);
+    }
+
+    .support-item .kicker {
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .support-item .text {
+      color: var(--soft);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 2px 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer a {
+      color: #8bdcff;
+      text-decoration: none;
+    }
+
     .footer a:hover { text-decoration: underline; }
 
-    @media (max-width: 520px) {
-      .features { grid-template-columns: 1fr; }
-      .btn-row { grid-template-columns: 1fr; }
-      .version-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .v-meta { flex-direction: row; }
-      .v-meta-item { align-items: flex-start; }
-      .logo-name { font-size: 1.6rem; }
+    .glow {
+      position: fixed;
+      inset: auto auto 10% -8%;
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(0, 86, 255, .22) 0%, transparent 68%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(10px);
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .section,
+      .support-grid,
+      .download-note {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar,
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-panel,
+      .feature-card,
+      .download-card,
+      .support-card,
+      .aside-panel,
+      .stats-card {
+        padding: 22px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100% - 20px, 1180px);
+        padding-top: 16px;
+      }
+
+      .brand-title { font-size: 22px; }
+      h1 { font-size: clamp(34px, 10vw, 46px); }
+      .hero-copy { font-size: 15px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .download-strip { flex-direction: column; align-items: flex-start; }
+      .download-strip .meta { text-align: left; }
+      .btn { width: 100%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .btn-dl, .btn-alt, .feat { transition: none; }
+      html { scroll-behavior: auto; }
+      .btn,
+      .btn-secondary,
+      .btn-primary {
+        transition: none;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="glow" aria-hidden="true"></div>
 
-<div class="glow-top"></div>
-
-<!-- HEADER -->
-<header class="header">
-  <div class="logo-row">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <path d="M9 12l2 2 4-4"/>
-      </svg>
+  <div class="shell">
+    <div class="topbar">
+      <a class="brand" href="#top" aria-label="VacciTrack">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M8 12h3l1.4-2.8L14.8 15 16 12h2"></path>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <div class="brand-title">Vacci<span>Track</span></div>
+          <div class="brand-subtitle">Plateforme de suivi vaccinal</div>
+        </div>
+      </a>
+      <div class="badge"><span class="badge-dot"></span>Version prête à installer</div>
     </div>
-    <div class="logo-name">Vacci<span>Track</span></div>
-  </div>
-  <p class="tagline">Suivi complet de la vaccination — patients, carnets, rappels et certificats dans une seule application sécurisée.</p>
-</header>
 
-<!-- MAIN CARD -->
-<main class="card">
+    <section class="hero" id="top">
+      <div class="hero-panel">
+        <div class="eyebrow">CHU Tlemcen · Vaccination · Patients · Rappels</div>
+        <h1>Le suivi vaccinal, <span class="accent">clair</span>, rapide et prêt pour le terrain.</h1>
+        <p class="hero-copy">
+          VacciTrack centralise les dossiers patients, les vaccinations, les stocks, les rappels et les certificats PDF dans une interface moderne pensée pour les équipes de santé.
+          Cette page de téléchargement reprend le même langage visuel que l’application : fond profond, cartes vitrées, accents bleus et micro-contrastes nets.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://drive.google.com/file/d/1rztj_YS5qR931qNALnO4nIj7w4JrxX_m/view?usp=sharing" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v13"></path>
+              <path d="M7 11l5 5 5-5"></path>
+              <path d="M4 20h16"></path>
+            </svg>
+            Télécharger VacciTrack
+          </a>
+          <a class="btn btn-secondary" href="#details">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+            Voir les fonctionnalités
+          </a>
+        </div>
+      </div>
 
-  <!-- Version bar -->
-  <div class="version-bar">
-    <div class="v-left">
-      <span class="v-badge">STABLE</span>
+      <aside class="stats-card" aria-label="Résumé du produit">
+        <div class="stats-title">
+          <strong>Résumé</strong>
+          <span class="badge" style="padding:8px 12px; font-size:12px;">Windows · 64 bits</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="value">3.1.2</div>
+            <div class="label">Version stable publiée</div>
+            <div class="hint">Build installable</div>
+          </div>
+          <div class="stat">
+            <div class="value">92 MB</div>
+            <div class="label">Poids du package</div>
+            <div class="hint">Téléchargement rapide</div>
+          </div>
+          <div class="stat">
+            <div class="value">Offline</div>
+            <div class="label">Fonctionne localement</div>
+            <div class="hint">Base MySQL locale</div>
+          </div>
+          <div class="stat">
+            <div class="value">PDF</div>
+            <div class="label">Carnets et ordonnances</div>
+            <div class="hint">Documents générés</div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="details">
+      <div class="feature-card">
+        <div class="section-title">
+          <h2>Ce que l’application offre</h2>
+          <span>Interface unifiée</span>
+        </div>
+        <div class="feature-list">
+          <div class="feature">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Dossiers patients</h3>
+              <p>Identité, antécédents, vaccins, données médicales et export patient.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                <path d="M16 2v4M8 2v4M3 10h18"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Rappels et échéances</h3>
+              <p>Suivi des doses, alertes et visualisation des dossiers à revoir.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Certificats PDF</h3>
+              <p>Génération de cartes vaccinales et d’ordonnances en quelques secondes.</p>
+            </div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3h18v18H3z"></path>
+                <path d="M3 9h18M9 21V9"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Tableau de bord</h3>
+              <p>Statistiques, distribution, stocks critiques et indicateurs clés.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="download-card">
+        <div class="section-title">
+          <h2>Téléchargement</h2>
+          <span>Package Windows</span>
+        </div>
+        <div class="download-meta">
+          <div class="download-strip">
+            <div>
+              <small>Version courante</small>
+              <strong>VacciTrack v3.1.2</strong>
+            </div>
+            <div class="meta">
+              Publiée le 18 juin 2026<br>
+              Fonctionne sous Windows 10 et plus
+            </div>
+          </div>
+          <div class="download-callout">
+            Le lien ci-dessous télécharge le package installé utilisé par les utilisateurs. Si tu déploies cette page sur Vercel, tu peux garder le même lien ou le remplacer par un asset de release GitHub.
+          </div>
+          <div class="download-actions">
+            <a class="btn btn-primary" href="https://drive.google.com/file/d/1rztj_YS5qR931qNALnO4nIj7w4JrxX_m/view?usp=sharing" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v13"></path>
+                <path d="M7 11l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              Télécharger l’application
+            </a>
+            <a class="btn btn-secondary" href="https://github.com/USERNAME/REPO/releases" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+              </svg>
+              Versions précédentes
+            </a>
+          </div>
+        </div>
+
+        <div class="download-note">
+          <div class="note">
+            <strong>Installation</strong>
+            Lancez le `.exe`, puis connectez l’application à votre base MySQL.
+          </div>
+          <div class="note">
+            <strong>Sécurité</strong>
+            Les données restent sous votre contrôle avec un stockage local et un serveur dédié.
+          </div>
+          <div class="note">
+            <strong>Support</strong>
+            Ajoutez ici le contact de l’équipe ou le dépôt GitHub de production.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="support-card">
+      <div class="section-title">
+        <h2>Prêt pour la mise en ligne</h2>
+        <span>Vercel</span>
+      </div>
+      <div class="support-grid">
+        <div class="support-item">
+          <div class="kicker">1. Build</div>
+          <div class="text">Dépose cette page dans le projet et laisse Vercel servir `site_web/vaccitrack-download.html` comme page d’accueil.</div>
+        </div>
+        <div class="support-item">
+          <div class="kicker">2. Config</div>
+          <div class="text">Ajoute un `vercel.json` pour rediriger `/` vers cette landing page et garder le site en mode statique.</div>
+        </div>
+        <div class="support-item">
+          <div class="kicker">3. Release</div>
+          <div class="text">Une fois déployée, remplace les liens de téléchargement par tes assets publics ou un lien GitHub Release.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>© 2026 VacciTrack · CHU Tlemcen</div>
       <div>
-        <div class="v-name">Version 3.1.2</div>
-        <div class="v-date">Publié le 18 juin 2026</div>
-      </div>
-    </div>
-    <div class="v-meta">
-      <div class="v-meta-item">
-        <span class="v-meta-label">Taille</span>
-        <span class="v-meta-value">92 MB</span>
-      </div>
-      <div class="v-meta-item">
-        <span class="v-meta-label">Système</span>
-        <span class="v-meta-value">Win 10+</span>
+        <a href="#top">Haut de page</a> ·
+        <a href="https://github.com/USERNAME/REPO" target="_blank" rel="noreferrer">GitHub</a> ·
+        <a href="mailto:support@vaccitrack.dz">Support</a>
       </div>
     </div>
   </div>
-
-  <!-- Features -->
-  <div class="features">
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Dossiers patients</span>
-        <span class="feat-desc">Historique vaccinal complet par patient</span>
-      </div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <path d="M16 2v4M8 2v4M3 10h18"/>
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Rappels automatiques</span>
-        <span class="feat-desc">Alertes pour les prochains rappels de vaccins</span>
-      </div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-          <path d="M14 2v6h6M12 18v-6M9 15h6"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Certificats PDF</span>
-        <span class="feat-desc">Génération instantanée de carnets vaccinaux</span>
-      </div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M3 3h18v18H3zM3 9h18M9 21V9"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Tableau de bord</span>
-        <span class="feat-desc">Statistiques de couverture vaccinale en temps réel</span>
-      </div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <ellipse cx="12" cy="5" rx="9" ry="3"/>
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Données hors ligne</span>
-        <span class="feat-desc">Fonctionne sans connexion internet</span>
-      </div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0110 0v4"/>
-        </svg>
-      </div>
-      <div class="feat-body">
-        <span class="feat-title">Chiffrement AES-256</span>
-        <span class="feat-desc">Conformité RGPD et données médicales</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Download section -->
-  <div class="dl-section">
-    <a class="btn-dl"
-       href="https://drive.google.com/file/d/1rztj_YS5qR931qNALnO4nIj7w4JrxX_m/view?usp=sharing"
-       download>
-      <div class="btn-dl-left">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <path d="M12 3v13M7 11l5 5 5-5"/>
-          <path d="M4 20h16"/>
-        </svg>
-        Télécharger VacciTrack v3.1.2
-      </div>
-      <span class="btn-dl-right">Windows · 92 MB</span>
-    </a>
-
-    <div class="btn-row">
-      <a class="btn-alt" href="https://github.com/USERNAME/REPO/releases">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-          <path d="M9 12l2 2 4-4"/>
-        </svg>
-        Versions précédentes
-      </a>
-      <a class="btn-alt" href="https://github.com/USERNAME/REPO/wiki">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
-          <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
-        </svg>
-        Documentation
-      </a>
-    </div>
-  </div>
-
-  <!-- Security strip -->
-  <div class="security">
-    <div class="sec-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-      Fichier signé numériquement
-    </div>
-    <div class="sec-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 12l2 2 4-4"/>
-        <circle cx="12" cy="12" r="10"/>
-      </svg>
-      Analysé par Windows Defender
-    </div>
-    <div class="sec-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2"/>
-        <path d="M7 11V7a5 5 0 0110 0v4"/>
-      </svg>
-      Conforme RGPD
-    </div>
-  </div>
-
-</main>
-
-<!-- FOOTER -->
-<footer class="footer">
-  <p>© 2026 VacciTrack — <a href="#">Politique de confidentialité</a> · <a href="#">Support</a> · <a href="https://github.com/USERNAME/REPO">GitHub</a></p>
-</footer>
-
 </body>
 </html>
