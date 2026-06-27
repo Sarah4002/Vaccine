@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/site_web/vaccitrack-download.html"
+      "destination": "/site_web/index.html"
     },
     {
       "source": "/:path*",
-      "destination": "/site_web/vaccitrack-download.html"
+      "destination": "/site_web/index.html"
     }
   ]
 }
